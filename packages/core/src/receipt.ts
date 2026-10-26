@@ -129,7 +129,7 @@ export function renderText(receipt: Receipt): string {
   if (receipt.input.depositAddress) out.push(row("deposit_address", receipt.input.depositAddress));
   if (receipt.input.memo) out.push(row("deposit_memo", receipt.input.memo));
   if (e.correlationId) out.push(row("correlation_id", e.correlationId));
-  out.push(row("mode", e.mode === "api" ? "partner key present" : "public data only"));
+  out.push(row("mode", e.mode === "authenticated" ? "with partner key" : "no partner key (endpoint answers anyway)"));
   out.push(row("status", e.status ? `${e.status}${e.statusUpdatedAt ? `    last changed ${e.statusUpdatedAt.slice(0, 10)}` : ""}` : "unavailable without a partner key"));
   if (e.depositType || e.recipientType) {
     out.push(row("route", `${e.depositType ?? "?"} -> ${e.recipientType ?? "?"}`));

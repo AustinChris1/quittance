@@ -24,7 +24,7 @@ function loadFixtures(): Fixture[] {
 const fixtures = loadFixtures();
 
 test("every fixture is classified as its recorded label", () => {
-  assert.ok(fixtures.length >= 7, "expected the full frozen case set");
+  assert.ok(fixtures.length >= 9, "expected the full frozen case set");
   for (const fixture of fixtures) {
     const { verdict } = classify(fixture.evidence);
     assert.equal(
@@ -61,11 +61,40 @@ test("the shielded case never asserts a loss", () => {
   );
 });
 
-test("a verdict without a partner key says so in its limits", () => {
-  const publicOnly = fixtures.find((f) => f.case.id === "07-public-only-undetermined");
-  assert.ok(publicOnly, "public-only fixture missing");
-  const { verdict } = classify(publicOnly.evidence);
-  assert.ok(verdict.limits.some((l) => l.includes("partner key")));
+test("an unreadable status is reported with the operator's own reason", () => {
+  const unknown = fixtures.find((f) => f.case.id === "07-unknown-to-operator");
+  assert.ok(unknown, "unknown-to-operator fixture missing");
+  const { verdict } = classify(unknown.evidence);
+  assert.ok(verdict.limits.some((l) => l.includes("The swap status was not read")));
+  assert.ok(verdict.limits.some((l) => l.includes("no record of this deposit address")));
+});
+
+test("no verdict claims that reading a status needs a partner key", () => {
+  for (const fixture of fixtures) {
+    const { verdict } = classify(fixture.evidence);
+    const prose = [verdict.headline, ...verdict.basis, ...verdict.limits, verdict.next].join(" ");
+    assert.ok(
+      !/partner key/i.test(prose),
+      `${fixture.case.id} claims a partner key is needed; the endpoint answers without one`,
+    );
+  }
+});
+
+test("the long bitcoin timer only binds a deposit that set no refund address", () => {
+  const delivered = fixtures.find((f) => f.case.id === "08-btc-delivered-not-locked-out");
+  const refundSet = fixtures.find((f) => f.case.id === "09-btc-refund-address-set");
+  assert.ok(delivered && refundSet, "bitcoin regression fixtures missing");
+
+  // Both carry the 100 year connector config, so only the extra conditions can keep them apart.
+  assert.equal(delivered.evidence.connector?.unsafeRefundTimelockSec, 3153600000);
+  assert.equal(refundSet.evidence.connector?.unsafeRefundTimelockSec, 3153600000);
+  assert.notEqual(classify(delivered.evidence).verdict.label, "LOCKED_OUT");
+  assert.notEqual(classify(refundSet.evidence).verdict.label, "LOCKED_OUT");
+
+  const locked = fixtures.find((f) => f.case.id === "03-locked-out-btc");
+  assert.ok(locked);
+  assert.equal(classify(locked.evidence).verdict.label, "LOCKED_OUT");
+  assert.equal(locked.evidence.status.available ? locked.evidence.status.refundTo : "x", undefined);
 });
 
 test("fingerprints are stable across runs and change with the evidence", () => {

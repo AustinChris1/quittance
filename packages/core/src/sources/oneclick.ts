@@ -49,6 +49,15 @@ function oneOf<T extends readonly string[]>(list: T, value: unknown): T[number] 
 
 export type StatusRead = { evidence: StatusEvidence; sources: SourceRef[] };
 
+/** Records the rate-limit tier the server applied, which shows whether the call was authenticated. */
+function annotate(source: SourceRef, headers?: Headers): SourceRef {
+  if (!headers) return source;
+  const unauth = headers.get("x-ratelimit-limit-unauth");
+  const auth = headers.get("x-ratelimit-limit");
+  const tier = unauth ? `unauthenticated, limit ${unauth}` : auth ? `authenticated, limit ${auth}` : undefined;
+  return tier ? { ...source, detail: `${source.detail ?? ""} ${tier}`.trim() } : source;
+}
+
 export async function readOneClickStatus(params: {
   depositAddress: string;
   memo?: string;
@@ -60,32 +69,42 @@ export async function readOneClickStatus(params: {
   url.searchParams.set("depositAddress", params.depositAddress);
   if (params.memo) url.searchParams.set("depositMemo", params.memo);
 
-  if (!params.apiKey) {
-    return {
-      evidence: {
-        available: false,
-        reason:
-          "No partner key supplied. The 1Click status endpoint requires X-API-Key, so an ordinary user cannot read their own swap.",
-      },
-      sources: [],
-    };
+  // The status endpoint answers without a key. A key is for the fee schedule, not for read access.
+  const call = (key?: string) =>
+    readJson<Raw>({
+      name: key ? "1click.status (authenticated)" : "1click.status (unauthenticated)",
+      url: url.toString(),
+      headers: key ? { "X-API-Key": key } : {},
+    });
+
+  const sources: SourceRef[] = [];
+  let res = await call(params.apiKey);
+  sources.push(annotate(res.source, res.headers));
+
+  // A rejected key is worse than no key, so fall back rather than give up.
+  if (!res.ok && res.status === 401 && params.apiKey) {
+    const retry = await call(undefined);
+    sources.push(annotate(retry.source, retry.headers));
+    if (retry.ok) {
+      res = retry;
+    } else {
+      return {
+        evidence: {
+          available: false,
+          reason:
+            "The supplied partner key was rejected with HTTP 401, and the unauthenticated retry also failed.",
+        },
+        sources,
+      };
+    }
   }
 
-  const res = await readJson<Raw>({
-    name: "1click.status",
-    url: url.toString(),
-    headers: { "X-API-Key": params.apiKey },
-  });
-
   if (!res.ok) {
-    const detail = res.source.detail ?? "unknown error";
-    return {
-      evidence: {
-        available: false,
-        reason: `The 1Click status endpoint could not be read (${detail}). A 404 here means the deposit address is unknown to the API.`,
-      },
-      sources: [res.source],
-    };
+    const reason =
+      res.status === 404
+        ? "The operator has no record of this deposit address. Either the quote was never created, or the address belongs to a different route."
+        : `The 1Click status endpoint could not be read (${res.source.detail ?? "unknown error"}).`;
+    return { evidence: { available: false, reason }, sources };
   }
 
   const root = res.data;
@@ -98,7 +117,7 @@ export async function readOneClickStatus(params: {
         available: false,
         reason: `The status endpoint replied without a recognised status value (${String(root.status)}).`,
       },
-      sources: [res.source],
+      sources,
     };
   }
 
@@ -128,6 +147,6 @@ export async function readOneClickStatus(params: {
         ? swapDetails.intentHashes.filter((h): h is string => typeof h === "string")
         : [],
     },
-    sources: [res.source],
+    sources,
   };
 }

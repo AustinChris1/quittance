@@ -16,7 +16,7 @@
       "depositAddress": "bc1qexamplestuckdeposit0000000000000000385"
     },
     "fetchedAt": "2026-10-26T00:00:00.000Z",
-    "mode": "api",
+    "mode": "authenticated",
     "status": {
       "available": true,
       "status": "PENDING_DEPOSIT",

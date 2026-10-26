@@ -107,7 +107,7 @@ export async function gatherEvidence(options: GatherOptions): Promise<Evidence> 
       nearTxHash,
     },
     fetchedAt,
-    mode: options.apiKey ? "api" : "public-only",
+    mode: options.apiKey ? "authenticated" : "unauthenticated",
     status,
     chain,
     connector,

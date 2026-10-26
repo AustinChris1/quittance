@@ -139,7 +139,7 @@ function cmdVerify(): void {
     const ok = verdict.label === fixture.case.expectedLabel;
     if (ok) correct += 1;
     console.log(
-      `${ok ? " " : "x"}${fixture.case.id.padEnd(30)}${fixture.case.expectedLabel.padEnd(20)}${verdict.label.padEnd(20)}${ms.toFixed(1)}`,
+      `${ok ? " " : "x"}${fixture.case.id.padEnd(32)}${fixture.case.expectedLabel.padEnd(20)}${verdict.label.padEnd(20)}${ms.toFixed(1)}`,
     );
   }
 
@@ -174,7 +174,7 @@ Flags
   --btc               also read the bitcoin connector refund config
 
 Environment
-  QUITTANCE_ONECLICK_KEY     partner key; without it the tool runs in public-only mode
+  QUITTANCE_ONECLICK_KEY     partner key; optional, it sets the quote fee schedule and is not needed to read status
   QUITTANCE_WEBHOOK_URL      default webhook target
   QUITTANCE_NEAR_RPC         override the NEAR RPC endpoint
 

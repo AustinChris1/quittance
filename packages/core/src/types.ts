@@ -92,7 +92,8 @@ export type ConnectorEvidence = {
   requiredRefundDepositNear?: string;
 };
 
-export type EvidenceMode = "api" | "public-only";
+/** Whether the status call carried a partner key. The endpoint answers either way. */
+export type EvidenceMode = "authenticated" | "unauthenticated";
 
 export type Evidence = {
   input: { depositAddress?: string; memo?: string; nearTxHash?: string };

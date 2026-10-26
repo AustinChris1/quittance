@@ -1,0 +1,38 @@
+{
+  "case": {
+    "id": "07-unknown-to-operator",
+    "expectedLabel": "UNDETERMINED",
+    "title": "The operator has no record of this deposit address",
+    "frozenAt": "2026-10-26",
+    "provenance": {
+      "status": "Reproduced live on 2026-10-26. GET /v0/status with no X-API-Key returns HTTP 404 and the header X-RateLimit-Limit-unauth 1200, so the lookup runs unauthenticated. A deliberately wrong key returns 401 instead, which is why a rejected key falls back to no key."
+    }
+  },
+  "evidence": {
+    "input": {
+      "depositAddress": "0xDF7A93d400159d0f8f40AAe42576d01285EA9e39"
+    },
+    "fetchedAt": "2026-10-26T00:00:00.000Z",
+    "mode": "unauthenticated",
+    "status": {
+      "available": false,
+      "reason": "The operator has no record of this deposit address. Either the quote was never created, or the address belongs to a different route."
+    },
+    "chain": {
+      "checked": false,
+      "deposits": []
+    },
+    "sources": [
+      {
+        "name": "1click.status (unauthenticated)",
+        "url": "https://1click.chaindefuser.com/v0/status?depositAddress=0xDF7A93d400159d0f8f40AAe42576d01285EA9e39",
+        "readAt": "2026-10-26T00:00:00.000Z",
+        "ok": false,
+        "detail": "HTTP 404 unauthenticated, limit 1200"
+      }
+    ],
+    "notes": [
+      "The endpoint answered without a key, so read access is not the barrier here."
+    ]
+  }
+}

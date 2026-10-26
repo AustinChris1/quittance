@@ -1,0 +1,47 @@
+{
+  "case": {
+    "id": "09-btc-refund-address-set",
+    "expectedLabel": "IN_FLIGHT",
+    "title": "A bitcoin deposit that did set a refund address",
+    "frozenAt": "2026-10-26",
+    "provenance": {
+      "status": "Regression guard. With a refund address set the contract refunds after refund_timelock_sec, 2 days on mainnet, so the 100 year timer is irrelevant and LOCKED_OUT must not fire."
+    }
+  },
+  "evidence": {
+    "input": {
+      "depositAddress": "bc1qrefundwasset0000000000000000000000009"
+    },
+    "fetchedAt": "2026-10-26T00:00:00.000Z",
+    "mode": "unauthenticated",
+    "status": {
+      "available": true,
+      "status": "PENDING_DEPOSIT",
+      "correlationId": "00000000-0000-4000-8000-000000000009",
+      "updatedAt": "2026-10-26T00:00:00.000Z",
+      "depositType": "ORIGIN_CHAIN",
+      "recipientType": "DESTINATION_CHAIN",
+      "originAsset": "BTC on bitcoin",
+      "refundTo": "bc1qrefundaddresswasset00000000000000000009",
+      "refundedAmount": "0",
+      "refundReason": null,
+      "originChainTxHashes": [],
+      "destinationChainTxHashes": [],
+      "nearTxHashes": [],
+      "intentHashes": []
+    },
+    "chain": {
+      "checked": true,
+      "deposits": []
+    },
+    "connector": {
+      "contract": "btc-connector.bridge.near",
+      "unsafeRefundTimelockSec": 3153600000,
+      "safeRefundTimelockSec": 172800,
+      "documentedTimelockSec": 1209600,
+      "requiredRefundDepositNear": "2"
+    },
+    "sources": [],
+    "notes": []
+  }
+}

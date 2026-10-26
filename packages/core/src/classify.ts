@@ -18,9 +18,7 @@ function depositLanded(e: Evidence): boolean {
 
 function baseLimits(e: Evidence): string[] {
   const limits = [ALWAYS_LIMIT];
-  if (e.mode === "public-only") {
-    limits.push("The 1Click status field was not read because no partner key was supplied.");
-  }
+  if (!e.status.available) limits.push(`The swap status was not read. ${e.status.reason}`);
   if (!e.chain.checked) {
     limits.push("Chain evidence was not gathered, so delivery could not be checked independently.");
   }
@@ -40,7 +38,15 @@ const RULES: Rule[] = [
     applies: (e) => {
       const c = e.connector;
       if (!c || c.unsafeRefundTimelockSec === undefined) return false;
-      return c.unsafeRefundTimelockSec > c.documentedTimelockSec * 10;
+      if (c.unsafeRefundTimelockSec <= c.documentedTimelockSec * 10) return false;
+      // The long timer only binds a deposit that set no refund address.
+      if (!e.status.available || e.status.refundTo) return false;
+      // A settled swap, or one already refunded, needs no refund path at all.
+      if (e.status.status === "SUCCESS") return false;
+      if (e.status.status === "REFUNDED" && (!isZero(e.status.refundedAmount) || e.chain.refundTx)) {
+        return false;
+      }
+      return true;
     },
     build: (e) => {
       const c = e.connector!;
@@ -264,7 +270,7 @@ export function classify(evidence: Evidence): Classification {
         ...baseLimits(evidence),
         "An unclassified deposit is a gap in these rules, not proof that the swap is healthy.",
       ],
-      next: "Re-run with a partner key if you have one. If the evidence still does not match a known pattern, file it as a new case.",
+      next: "Confirm the deposit address is the one the quote issued, and supply the NEAR transaction hash if you have it. If the evidence still does not match a known pattern, file it as a new case.",
     },
     rulesEvaluated: evaluated,
   };

@@ -18,7 +18,7 @@
       "nearTxHash": "8a33DkKfZMWRKbK2pXuQAWVLXSy4AyZF6PfcENvCJgCb"
     },
     "fetchedAt": "2026-10-26T00:00:00.000Z",
-    "mode": "api",
+    "mode": "authenticated",
     "status": {
       "available": true,
       "status": "FAILED",
@@ -36,7 +36,9 @@
         }
       ],
       "destinationChainTxHashes": [],
-      "nearTxHashes": ["8a33DkKfZMWRKbK2pXuQAWVLXSy4AyZF6PfcENvCJgCb"],
+      "nearTxHashes": [
+        "8a33DkKfZMWRKbK2pXuQAWVLXSy4AyZF6PfcENvCJgCb"
+      ],
       "intentHashes": []
     },
     "chain": {

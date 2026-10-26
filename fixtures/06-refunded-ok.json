@@ -13,7 +13,7 @@
       "depositAddress": "0x0000000000000000000000000000000000000383"
     },
     "fetchedAt": "2026-10-26T00:00:00.000Z",
-    "mode": "api",
+    "mode": "authenticated",
     "status": {
       "available": true,
       "status": "REFUNDED",

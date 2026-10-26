@@ -19,7 +19,8 @@ export const LABEL_HEADLINE: Record<Label, string> = {
   IN_FLIGHT: "Still moving. No failure to report yet.",
   STRANDED: "Your deposit arrived, the swap is marked failed, and nothing came back.",
   WRONG_DOOR: "Right idea, wrong place. The deposit does not match the quote it was made for.",
-  LOCKED_OUT: "A refund exists on paper but the contract timer puts it out of reach.",
+  LOCKED_OUT:
+    "This deposit set no refund address, so recovering it falls behind a timer far longer than the guide states.",
   SHIELDED_UNPROVEN: "This swap is private. Public records cannot prove delivery either way.",
   UNDETERMINED: "Not enough evidence to classify this deposit.",
 };

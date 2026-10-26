@@ -1,0 +1,57 @@
+{
+  "case": {
+    "id": "08-btc-delivered-not-locked-out",
+    "expectedLabel": "DELIVERED",
+    "title": "A settled bitcoin swap, with the 100 year connector timer still attached",
+    "frozenAt": "2026-10-26",
+    "provenance": {
+      "status": "Regression guard. The connector config is read for any bitcoin route, so the long timer is present here too. A delivered swap needs no refund path and must not be labelled LOCKED_OUT."
+    }
+  },
+  "evidence": {
+    "input": {
+      "depositAddress": "bc1qdelivered000000000000000000000000000008"
+    },
+    "fetchedAt": "2026-10-26T00:00:00.000Z",
+    "mode": "unauthenticated",
+    "status": {
+      "available": true,
+      "status": "SUCCESS",
+      "correlationId": "00000000-0000-4000-8000-000000000008",
+      "updatedAt": "2026-10-26T00:00:00.000Z",
+      "depositType": "ORIGIN_CHAIN",
+      "recipientType": "DESTINATION_CHAIN",
+      "originAsset": "BTC on bitcoin",
+      "refundTo": "bc1qrefundaddresswasset00000000000000000008",
+      "refundedAmount": "0",
+      "refundReason": null,
+      "originChainTxHashes": [
+        {
+          "chain": "bitcoin",
+          "hash": "btcorigin00000000000000000000000000000008"
+        }
+      ],
+      "destinationChainTxHashes": [
+        {
+          "chain": "near",
+          "hash": "neardest000000000000000000000000000000008"
+        }
+      ],
+      "nearTxHashes": [],
+      "intentHashes": []
+    },
+    "chain": {
+      "checked": true,
+      "deposits": []
+    },
+    "connector": {
+      "contract": "btc-connector.bridge.near",
+      "unsafeRefundTimelockSec": 3153600000,
+      "safeRefundTimelockSec": 172800,
+      "documentedTimelockSec": 1209600,
+      "requiredRefundDepositNear": "2"
+    },
+    "sources": [],
+    "notes": []
+  }
+}

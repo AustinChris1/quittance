@@ -30,14 +30,17 @@ node apps/cli/src/main.ts replay 01-stranded-trx
 Expect `LABEL STRANDED`, rule `stranded/terminal-with-no-refund`, and a basis line reading
 `575830.000000 TRX was credited to intents.near`.
 
-**Step 3 - read the same deposit live from mainnet, with no partner key.**
+**Step 3 - read live from mainnet, with no key of any kind.**
 
 ```
 node apps/cli/src/main.ts check --tx 8a33DkKfZMWRKbK2pXuQAWVLXSy4AyZF6PfcENvCJgCb
+node apps/cli/src/main.ts check --deposit 0xDF7A93d400159d0f8f40AAe42576d01285EA9e39 --json
 ```
 
-Expect `LABEL UNDETERMINED` and a limit reading `The 1Click status field was not read because no
-partner key was supplied`. This is the tool refusing to guess, and it is the finding in step 4.
+The first proves the chain facts and returns `UNDETERMINED`, because a NEAR transaction alone does
+not tell you what the operator thinks happened. The second calls the status endpoint with no
+credentials at all; its receipt cites `HTTP 404 unauthenticated, limit 1200`, which is the server
+confirming it processed an anonymous lookup.
 
 **Step 4 - close the loop into an endpoint you control.**
 
@@ -64,14 +67,24 @@ node apps/cli/src/main.ts rules
 node --test packages/core/test/fixtures.test.ts
 ```
 
-## The finding behind step 3
+## What a partner key is for, and what the real barrier is
 
-The 1Click status endpoint accepts only a deposit address, never a correlation id, and it
-requires an `X-API-Key` issued to partners. An ordinary user holding a stuck deposit therefore
-cannot read their own swap programmatically. Quittance still runs without a key, reports every
-chain fact it can prove, and labels the result `UNDETERMINED` rather than inventing a verdict.
+Measured against the live server on 2026-10-26:
 
-With a key, export `QUITTANCE_ONECLICK_KEY` and the status fields fill in.
+| Call | Result |
+| --- | --- |
+| No `X-API-Key` | `404 Deposit address ... not found`, with `X-RateLimit-Limit-unauth: 1200` |
+| A deliberately wrong `X-API-Key` | `401` |
+
+So reading a swap needs no key, and a rejected key is worse than no key. Quittance retries
+unauthenticated when a supplied key returns 401, and records which tier the server applied in the
+receipt's `sources`. A partner key governs the quote fee schedule, where unauthenticated quotes
+carry an extra 0.25 percent platform fee. It is not a gate on reading.
+
+The real barrier is the shape of the lookup. `/v0/status` accepts a deposit address plus an
+optional memo, and nothing else. There is no correlation-id parameter. Someone holding only the
+tracking number from a support thread, which is what failure reports actually quote, cannot look
+their swap up at all. That is why the flagship case is keyed from a NEAR transaction hash instead.
 
 ## The labels
 
