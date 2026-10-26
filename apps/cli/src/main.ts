@@ -1,11 +1,12 @@
 #!/usr/bin/env node
-import { readdirSync, readFileSync } from "node:fs";
+import { readdirSync, readFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { join, isAbsolute } from "node:path";
 import { classify } from "../../../packages/core/src/classify.ts";
 import { buildReceipt, renderText } from "../../../packages/core/src/receipt.ts";
 import { gatherEvidence } from "../../../packages/core/src/gather.ts";
 import { postReceipt } from "../../../packages/core/src/webhook.ts";
 import { RULE_IDS } from "../../../packages/core/src/classify.ts";
+import { runStudy, renderStudy } from "../../../packages/core/src/study.ts";
 import type { Evidence } from "../../../packages/core/src/types.ts";
 
 const ROOT = join(import.meta.dirname, "../../..");
@@ -164,6 +165,27 @@ function cmdVerify(): void {
   if (correct !== fixtures.length) process.exitCode = 1;
 }
 
+async function cmdStudy(args: Args): Promise<void> {
+  const token =
+    flagString(args.flags, "token") ??
+    process.env.QUITTANCE_PARTNER_JWT ??
+    process.env.QUITTANCE_ONECLICK_KEY;
+  if (!token) {
+    console.error("The study needs a partner JWT. Set QUITTANCE_PARTNER_JWT in .env.");
+    process.exitCode = 1;
+    return;
+  }
+  const study = await runStudy({ token });
+  console.log(renderStudy(study));
+  if (args.flags.save) {
+    const dir = join(ROOT, "studies");
+    mkdirSync(dir, { recursive: true });
+    const path = join(dir, study.at.slice(0, 10) + ".json");
+    writeFileSync(path, JSON.stringify(study, null, 2) + "\n");
+    console.log("\nsaved " + path);
+  }
+}
+
 function cmdRules(): void {
   console.log("Rules are evaluated in this order and the first match wins.\n");
   RULE_IDS.forEach((id, i) => console.log(`${String(i + 1).padStart(2)}. ${id}`));
@@ -177,6 +199,7 @@ function cmdHelp(): void {
   quittance check --tx <near tx hash>
   quittance replay <case-id>
   quittance cases
+  quittance study [--save]
   quittance verify
   quittance rules
 
@@ -205,6 +228,9 @@ async function main(): Promise<void> {
       break;
     case "cases":
       cmdCases();
+      break;
+    case "study":
+      await cmdStudy(args);
       break;
     case "verify":
       cmdVerify();

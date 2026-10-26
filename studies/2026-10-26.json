@@ -1,0 +1,51 @@
+{
+  "at": "2026-10-26T20:23:59.166Z",
+  "windowNote": "Cohorts are the most recent transactions the explorer returns for each status, newest first.",
+  "cohorts": [
+    {
+      "status": "FAILED",
+      "sampled": 1000,
+      "capped": true,
+      "depositLanded": 145,
+      "unresolved": 29,
+      "unresolvedNotionalUsd": 1958.842608670957,
+      "largestUnresolvedUsd": 700,
+      "ageDaysP50": 27.431455358796295,
+      "ageDaysMax": 46.016574166666665
+    },
+    {
+      "status": "PROCESSING",
+      "sampled": 310,
+      "capped": false,
+      "depositLanded": 283,
+      "unresolved": 44,
+      "unresolvedNotionalUsd": 334053.942380494,
+      "largestUnresolvedUsd": 114620,
+      "ageDaysP50": 255.2517926388889,
+      "ageDaysMax": 292.6366340277778
+    }
+  ],
+  "sources": [
+    {
+      "name": "intents.explorer.cohort:FAILED",
+      "url": "https://explorer.near-intents.org/api/v0/transactions?numberOfTransactions=1000&statuses=FAILED",
+      "readAt": "2026-10-26T20:23:50.121Z",
+      "ok": true,
+      "detail": "HTTP 200"
+    },
+    {
+      "name": "intents.explorer.cohort:PROCESSING",
+      "url": "https://explorer.near-intents.org/api/v0/transactions?numberOfTransactions=1000&statuses=PROCESSING",
+      "readAt": "2026-10-26T20:23:57.435Z",
+      "ok": true,
+      "detail": "HTTP 200"
+    }
+  ],
+  "caveats": [
+    "A cohort marked capped hit the page limit, so the real population is at least this large.",
+    "Notional is the quoted USD value at creation time, not a realised loss.",
+    "A deposit counts as landed only when an origin-chain transaction is recorded. Most failed quotes never received one and are excluded.",
+    "Unresolved means no destination transaction and no refund fee charged. Some may still settle, as one case in this repo did after sixteen days.",
+    "No addresses, amounts per user, or identifiers are retained. Only counts and aggregates."
+  ]
+}

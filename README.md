@@ -28,6 +28,33 @@ due. A healthy field read as a symptom.
 The Ethereum transfer was confirmed by querying an Ethereum node directly, not by trusting the
 operator's record. That is the whole thesis: a status word is not an answer, in either direction.
 
+## How big is this, beyond one case
+
+One anecdote is not a problem statement, so Quittance measures the population. Run it yourself
+with `node apps/cli/src/main.ts study --save`, which writes a dated snapshot to `studies/`.
+
+Measured 2026-10-26:
+
+| Cohort | Sampled | Deposit landed | Landed, never settled, never refunded | Notional | Median age |
+| --- | --- | --- | --- | --- | --- |
+| `FAILED` | 1000 (capped) | 145 | 29 | $1,959 | 27 days |
+| `PROCESSING` | 310 (full) | 283 | **44** | **$334,054** | **255 days** |
+
+Read this honestly, because the headline is not that the system is broken. In a separate
+one-hour window, 978 of 1000 swaps succeeded. Most `FAILED` records never received a deposit at
+all; they are abandoned quotes, which is why the classifier refuses to say `STRANDED` without a
+landed deposit. Refunds largely work, and no `REFUNDED` record in the sample was older than seven
+days.
+
+The finding is the tail. Forty-four swaps took a deposit, produced no destination transaction and
+charged no refund fee, and have sat that way for a median of 255 days. The largest single one is
+$114,620 of quoted notional. Those are not pending; they are forgotten. And the people holding
+them cannot look them up, for the reason in the next section.
+
+Notional is the quoted USD value at creation, not a realised loss, and some may yet settle, as
+the case above did after sixteen days. The snapshot retains counts only: no addresses, no
+per-user amounts, no identifiers.
+
 ## Run it
 
 No install. The core has zero runtime dependencies and Node runs the TypeScript directly.
@@ -181,6 +208,8 @@ packages/core/src/sources/        1Click status, NEAR RPC, NearBlocks
 packages/core/src/webhook.ts      the only write, HMAC signed
 apps/cli/src/main.ts              check, replay, cases, verify, rules
 apps/sink/src/main.ts             reference receiver, stands in for an integrator endpoint
+packages/core/src/study.ts        population measurement, aggregates only
+studies/                          dated snapshots of that measurement
 fixtures/                         frozen cases with provenance
 ```
 
