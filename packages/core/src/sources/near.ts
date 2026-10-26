@@ -81,16 +81,24 @@ export async function readBtcConnectorConfig(rpc?: string): Promise<{
 
   if (!value || typeof value !== "object") return { source };
   const config = value as Record<string, unknown>;
-  const timelock = config.unsafe_refund_timelock_sec;
-  const requiredDeposit = config.required_balance_for_request_refund;
+  const unsafe = config.unsafe_refund_timelock_sec;
+  const safe = config.refund_timelock_sec;
+
+  // The refund fee is a separate view method, not a field on the config.
+  const fee = await viewFunction({
+    contract: BTC_CONNECTOR,
+    method: "required_balance_for_request_refund",
+    rpc,
+  });
 
   return {
     connector: {
       contract: BTC_CONNECTOR,
-      unsafeRefundTimelockSec: typeof timelock === "number" ? timelock : undefined,
+      unsafeRefundTimelockSec: typeof unsafe === "number" ? unsafe : undefined,
+      safeRefundTimelockSec: typeof safe === "number" ? safe : undefined,
       documentedTimelockSec: DOCUMENTED_BTC_REFUND_TIMELOCK_SEC,
       requiredRefundDepositNear:
-        typeof requiredDeposit === "string" ? yoctoToNear(requiredDeposit) : undefined,
+        typeof fee.value === "string" ? yoctoToNear(fee.value) : undefined,
     },
     source,
   };

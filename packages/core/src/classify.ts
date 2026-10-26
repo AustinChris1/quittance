@@ -47,9 +47,15 @@ const RULES: Rule[] = [
       const years = (c.unsafeRefundTimelockSec! / 31_536_000).toFixed(1);
       const docDays = (c.documentedTimelockSec / 86_400).toFixed(0);
       const basis = [
-        `Connector ${c.contract} reports unsafe_refund_timelock_sec of ${c.unsafeRefundTimelockSec}, about ${years} years.`,
+        `A deposit with no refund address falls under unsafe_refund_timelock_sec on ${c.contract}, which reads ${c.unsafeRefundTimelockSec} seconds, about ${years} years.`,
         `The published recovery guide for this path states ${docDays} days.`,
       ];
+      if (c.safeRefundTimelockSec !== undefined) {
+        const safeDays = (c.safeRefundTimelockSec / 86_400).toFixed(0);
+        basis.push(
+          `The same contract refunds after ${safeDays} days when a refund address was set, so the long timer applies only to deposits without one.`,
+        );
+      }
       if (c.requiredRefundDepositNear) {
         basis.push(
           `Requesting the refund costs ${c.requiredRefundDepositNear} NEAR, which is not returned.`,

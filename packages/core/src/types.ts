@@ -84,7 +84,10 @@ export type ChainEvidence = {
 /** Bridge connector settings, used for the stuck-bitcoin case. */
 export type ConnectorEvidence = {
   contract: string;
+  /** Applies when the deposit carries no refund address. */
   unsafeRefundTimelockSec?: number;
+  /** Applies when a refund address was set. */
+  safeRefundTimelockSec?: number;
   documentedTimelockSec: number;
   requiredRefundDepositNear?: string;
 };

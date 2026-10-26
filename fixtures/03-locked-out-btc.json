@@ -5,7 +5,7 @@
     "title": "Bitcoin refund guide says 14 days, the connector timelock reads 100 years",
     "frozenAt": "2026-10-26",
     "provenance": {
-      "connector": "Values reported in near/intents issue #385 on 2026-10-19, traced to SputnikDAO proposal 322 on rainbowbridge.sputnik-dao.near dated 2026-10-16. Re-read get_config on btc-connector.bridge.near before acting.",
+      "connector": "Read directly from mainnet on 2026-10-26 by calling get_config and required_balance_for_request_refund on btc-connector.bridge.near. The 100 year timer applies only to deposits with no refund address; with one set the contract refunds after 2 days. Issue #385 traces the change to SputnikDAO proposal 322 dated 2026-10-16.",
       "links": [
         "https://github.com/near/intents/issues/385"
       ]
@@ -39,6 +39,7 @@
     "connector": {
       "contract": "btc-connector.bridge.near",
       "unsafeRefundTimelockSec": 3153600000,
+      "safeRefundTimelockSec": 172800,
       "documentedTimelockSec": 1209600,
       "requiredRefundDepositNear": "2"
     },
