@@ -1,0 +1,50 @@
+{
+  "case": {
+    "id": "03-locked-out-btc",
+    "expectedLabel": "LOCKED_OUT",
+    "title": "Bitcoin refund guide says 14 days, the connector timelock reads 100 years",
+    "frozenAt": "2026-10-26",
+    "provenance": {
+      "connector": "Values reported in near/intents issue #385 on 2026-10-19, traced to SputnikDAO proposal 322 on rainbowbridge.sputnik-dao.near dated 2026-10-16. Re-read get_config on btc-connector.bridge.near before acting.",
+      "links": [
+        "https://github.com/near/intents/issues/385"
+      ]
+    }
+  },
+  "evidence": {
+    "input": {
+      "depositAddress": "bc1qexamplestuckdeposit0000000000000000385"
+    },
+    "fetchedAt": "2026-10-26T00:00:00.000Z",
+    "mode": "api",
+    "status": {
+      "available": true,
+      "status": "PENDING_DEPOSIT",
+      "correlationId": "00000000-0000-4000-8000-000000000385",
+      "updatedAt": "2026-10-19T00:00:00.000Z",
+      "depositType": "ORIGIN_CHAIN",
+      "recipientType": "DESTINATION_CHAIN",
+      "originAsset": "BTC on bitcoin",
+      "refundedAmount": "0",
+      "refundReason": null,
+      "originChainTxHashes": [],
+      "destinationChainTxHashes": [],
+      "nearTxHashes": [],
+      "intentHashes": []
+    },
+    "chain": {
+      "checked": false,
+      "deposits": []
+    },
+    "connector": {
+      "contract": "btc-connector.bridge.near",
+      "unsafeRefundTimelockSec": 3153600000,
+      "documentedTimelockSec": 1209600,
+      "requiredRefundDepositNear": "2"
+    },
+    "sources": [],
+    "notes": [
+      "The quote carries no refund address, which is what puts the deposit behind the timelock."
+    ]
+  }
+}

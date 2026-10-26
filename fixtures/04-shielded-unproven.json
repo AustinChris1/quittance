@@ -1,0 +1,53 @@
+{
+  "case": {
+    "id": "04-shielded-unproven",
+    "expectedLabel": "SHIELDED_UNPROVEN",
+    "title": "Confidential swap reads SUCCESS with no public delivery evidence",
+    "frozenAt": "2026-10-26",
+    "provenance": {
+      "status": "Modelled on near/intents issue #384, filed 2026-10-18 and still open. A commenter showed the receiving account is the documented Confidential Intents treasury, so a zero public balance is expected here. This fixture deliberately asserts no loss.",
+      "links": [
+        "https://github.com/near/intents/issues/384",
+        "https://docs.near-intents.org/integration/market-makers/confidential-intents"
+      ]
+    }
+  },
+  "evidence": {
+    "input": {
+      "depositAddress": "0x0000000000000000000000000000000000000384"
+    },
+    "fetchedAt": "2026-10-26T00:00:00.000Z",
+    "mode": "api",
+    "status": {
+      "available": true,
+      "status": "SUCCESS",
+      "correlationId": "00000000-0000-4000-8000-000000000384",
+      "updatedAt": "2026-10-18T00:00:00.000Z",
+      "depositType": "ORIGIN_CHAIN",
+      "recipientType": "CONFIDENTIAL_INTENTS",
+      "originAsset": "ETH on ethereum",
+      "destinationAsset": "nep141:wrap.near",
+      "recipient": "51e8f94d77b5e90dc9852ca6113771e11e8382ce69473a75e313e41665de7cbe",
+      "amountInFormatted": "0.039",
+      "refundedAmount": "0",
+      "refundReason": null,
+      "originChainTxHashes": [],
+      "destinationChainTxHashes": [],
+      "nearTxHashes": [],
+      "intentHashes": []
+    },
+    "chain": {
+      "checked": true,
+      "deposits": [],
+      "recipientBalance": {
+        "account": "51e8f94d77b5e90dc9852ca6113771e11e8382ce69473a75e313e41665de7cbe",
+        "token": "wrap.near",
+        "amount": "0"
+      }
+    },
+    "sources": [],
+    "notes": [
+      "The receiving account is the production Confidential Intents treasury named in the market-maker docs."
+    ]
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "case": {
+    "id": "06-refunded-ok",
+    "expectedLabel": "REFUNDED_OK",
+    "title": "Swap failed at execution and the money went back",
+    "frozenAt": "2026-10-26",
+    "provenance": {
+      "status": "Synthetic control case, shaped after the REFUNDED with INTENT_SUBMIT_FAILED pattern in near/intents issue #383, where the fee was kept but the principal returned."
+    }
+  },
+  "evidence": {
+    "input": {
+      "depositAddress": "0x0000000000000000000000000000000000000383"
+    },
+    "fetchedAt": "2026-10-26T00:00:00.000Z",
+    "mode": "api",
+    "status": {
+      "available": true,
+      "status": "REFUNDED",
+      "correlationId": "00000000-0000-4000-8000-000000000383",
+      "updatedAt": "2026-09-22T00:00:00.000Z",
+      "depositType": "ORIGIN_CHAIN",
+      "recipientType": "CONFIDENTIAL_INTENTS",
+      "originAsset": "nep141:wrap.near",
+      "refundedAmount": "0.0499",
+      "refundReason": "INTENT_SUBMIT_FAILED",
+      "originChainTxHashes": [],
+      "destinationChainTxHashes": [],
+      "nearTxHashes": [],
+      "intentHashes": []
+    },
+    "chain": {
+      "checked": true,
+      "deposits": [],
+      "refundTx": {
+        "chain": "near",
+        "hash": "refundhash000000000000000000000000000000383"
+      }
+    },
+    "sources": [],
+    "notes": []
+  }
+}

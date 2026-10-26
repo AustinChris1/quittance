@@ -1,0 +1,30 @@
+{
+  "case": {
+    "id": "07-public-only-undetermined",
+    "expectedLabel": "UNDETERMINED",
+    "title": "No partner key, no chain evidence, so no honest verdict",
+    "frozenAt": "2026-10-26",
+    "provenance": {
+      "status": "Synthetic control case. It exists so the tool is shown refusing to guess when it cannot see enough."
+    }
+  },
+  "evidence": {
+    "input": {
+      "depositAddress": "0x0000000000000000000000000000000000000007"
+    },
+    "fetchedAt": "2026-10-26T00:00:00.000Z",
+    "mode": "public-only",
+    "status": {
+      "available": false,
+      "reason": "No partner key supplied. The 1Click status endpoint requires X-API-Key, so an ordinary user cannot read their own swap."
+    },
+    "chain": {
+      "checked": false,
+      "deposits": []
+    },
+    "sources": [],
+    "notes": [
+      "No partner key was supplied, so the status field could not be read."
+    ]
+  }
+}

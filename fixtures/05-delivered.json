@@ -1,0 +1,49 @@
+{
+  "case": {
+    "id": "05-delivered",
+    "expectedLabel": "DELIVERED",
+    "title": "Healthy swap with a published destination transaction",
+    "frozenAt": "2026-10-26",
+    "provenance": {
+      "status": "Synthetic control case. It exists so the rules are shown not to label every swap a failure."
+    }
+  },
+  "evidence": {
+    "input": {
+      "depositAddress": "0x0000000000000000000000000000000000000005"
+    },
+    "fetchedAt": "2026-10-26T00:00:00.000Z",
+    "mode": "api",
+    "status": {
+      "available": true,
+      "status": "SUCCESS",
+      "correlationId": "00000000-0000-4000-8000-000000000005",
+      "updatedAt": "2026-10-26T00:00:00.000Z",
+      "depositType": "ORIGIN_CHAIN",
+      "recipientType": "DESTINATION_CHAIN",
+      "originAsset": "nep141:wrap.near",
+      "refundedAmount": "0",
+      "refundReason": null,
+      "originChainTxHashes": [
+        {
+          "chain": "near",
+          "hash": "originhash0000000000000000000000000000000005"
+        }
+      ],
+      "destinationChainTxHashes": [
+        {
+          "chain": "base",
+          "hash": "0xdest00000000000000000000000000000000000005"
+        }
+      ],
+      "nearTxHashes": [],
+      "intentHashes": []
+    },
+    "chain": {
+      "checked": true,
+      "deposits": []
+    },
+    "sources": [],
+    "notes": []
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "case": {
+    "id": "02-wrong-door-base-eth",
+    "expectedLabel": "WRONG_DOOR",
+    "title": "0.17 ETH sent on Base to an address issued for an Ethereum quote",
+    "frozenAt": "2026-10-26",
+    "provenance": {
+      "status": "Reported in near/intents issue #382 on 2026-10-17 by a 1Click partner, with support ticket HS:3486295991-75764 already open. Field values are modelled on that report, not read from the API.",
+      "links": [
+        "https://github.com/near/intents/issues/382"
+      ]
+    }
+  },
+  "evidence": {
+    "input": {
+      "depositAddress": "0x0000000000000000000000000000000000000382"
+    },
+    "fetchedAt": "2026-10-26T00:00:00.000Z",
+    "mode": "api",
+    "status": {
+      "available": true,
+      "status": "INCOMPLETE_DEPOSIT",
+      "correlationId": "00000000-0000-4000-8000-000000000382",
+      "updatedAt": "2026-10-17T00:00:00.000Z",
+      "depositType": "ORIGIN_CHAIN",
+      "recipientType": "DESTINATION_CHAIN",
+      "originAsset": "ETH on ethereum",
+      "refundedAmount": "0",
+      "refundReason": null,
+      "originChainTxHashes": [],
+      "destinationChainTxHashes": [],
+      "nearTxHashes": [],
+      "intentHashes": []
+    },
+    "chain": {
+      "checked": true,
+      "deposits": [],
+      "assetMismatch": {
+        "expected": "ETH on ethereum",
+        "observed": "ETH",
+        "chain": "base"
+      },
+      "unspentAtDepositAddress": {
+        "chain": "base",
+        "token": "ETH",
+        "amount": "0.17"
+      }
+    },
+    "sources": [],
+    "notes": [
+      "A support ticket was already open when this case was filed."
+    ]
+  }
+}

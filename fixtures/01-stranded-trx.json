@@ -1,0 +1,77 @@
+{
+  "case": {
+    "id": "01-stranded-trx",
+    "expectedLabel": "STRANDED",
+    "title": "575,830 TRX credited to intents.near, status FAILED, refund field zero",
+    "frozenAt": "2026-10-26",
+    "provenance": {
+      "chain": "Verified directly against the NEAR transaction on 2026-10-26. Amount, credited account, block height and block timestamp are read from the chain.",
+      "status": "Reported by the depositor in NEAR Forum thread 42664 on 2026-10-09 and NOT independently verified, because the 1Click status endpoint is keyed by deposit address and requires a partner key. Re-query before relying on it.",
+      "links": [
+        "https://nearblocks.io/txns/8a33DkKfZMWRKbK2pXuQAWVLXSy4AyZF6PfcENvCJgCb",
+        "https://gov.near.org/t/failed-near-intents-1-click-swap-575-830-trx-193k-stuck-failed-status-zero-refund-no-support-response/42664"
+      ]
+    }
+  },
+  "evidence": {
+    "input": {
+      "nearTxHash": "8a33DkKfZMWRKbK2pXuQAWVLXSy4AyZF6PfcENvCJgCb"
+    },
+    "fetchedAt": "2026-10-26T00:00:00.000Z",
+    "mode": "api",
+    "status": {
+      "available": true,
+      "status": "FAILED",
+      "correlationId": "0f3b4660-83ab-44a5-a462-f45e13696bb5",
+      "updatedAt": "2026-09-12T00:00:00.000Z",
+      "depositType": "ORIGIN_CHAIN",
+      "recipientType": "DESTINATION_CHAIN",
+      "originAsset": "nep141:tron.omft.near",
+      "refundedAmount": "0",
+      "refundReason": null,
+      "originChainTxHashes": [
+        {
+          "chain": "tron",
+          "hash": "d9b9c4c3c88f99d78e9484871eaa8b1ee938bd67aad2093341817a600b8cfd67"
+        }
+      ],
+      "destinationChainTxHashes": [],
+      "nearTxHashes": ["8a33DkKfZMWRKbK2pXuQAWVLXSy4AyZF6PfcENvCJgCb"],
+      "intentHashes": []
+    },
+    "chain": {
+      "checked": true,
+      "deposits": [
+        {
+          "chain": "near",
+          "tx": {
+            "chain": "near",
+            "hash": "8a33DkKfZMWRKbK2pXuQAWVLXSy4AyZF6PfcENvCJgCb",
+            "explorerUrl": "https://nearblocks.io/txns/8a33DkKfZMWRKbK2pXuQAWVLXSy4AyZF6PfcENvCJgCb",
+            "confirmed": true
+          },
+          "token": "TRX",
+          "amount": "575830.000000",
+          "creditedTo": "intents.near",
+          "blockTimestampIso": "2026-09-11T16:27:04.048Z"
+        }
+      ],
+      "creditedTo": {
+        "account": "intents.near",
+        "token": "TRX",
+        "amount": "575830.000000"
+      }
+    },
+    "sources": [
+      {
+        "name": "nearblocks.txn",
+        "url": "https://api.nearblocks.io/v1/txns/8a33DkKfZMWRKbK2pXuQAWVLXSy4AyZF6PfcENvCJgCb",
+        "readAt": "2026-10-26T00:00:00.000Z",
+        "ok": true
+      }
+    ],
+    "notes": [
+      "Chain timestamp reads 2026-09-11T16:27:04Z, one day earlier than the forum post states. The chain is the better witness."
+    ]
+  }
+}

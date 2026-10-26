@@ -1,0 +1,210 @@
+#!/usr/bin/env node
+import { readdirSync, readFileSync } from "node:fs";
+import { join, isAbsolute } from "node:path";
+import { classify } from "../../../packages/core/src/classify.ts";
+import { buildReceipt, renderText } from "../../../packages/core/src/receipt.ts";
+import { gatherEvidence } from "../../../packages/core/src/gather.ts";
+import { postReceipt } from "../../../packages/core/src/webhook.ts";
+import { RULE_IDS } from "../../../packages/core/src/classify.ts";
+import type { Evidence } from "../../../packages/core/src/types.ts";
+
+const ROOT = join(import.meta.dirname, "../../..");
+const FIXTURE_DIR = join(ROOT, "fixtures");
+
+type Fixture = {
+  case: { id: string; expectedLabel: string; title: string; frozenAt: string; provenance?: unknown };
+  evidence: Evidence;
+};
+
+type Args = { command: string; flags: Record<string, string | boolean>; positional: string[] };
+
+function parseArgs(argv: string[]): Args {
+  const [command = "help", ...rest] = argv;
+  const flags: Record<string, string | boolean> = {};
+  const positional: string[] = [];
+  for (let i = 0; i < rest.length; i += 1) {
+    const token = rest[i]!;
+    if (!token.startsWith("--")) {
+      positional.push(token);
+      continue;
+    }
+    const key = token.slice(2);
+    const next = rest[i + 1];
+    if (next === undefined || next.startsWith("--")) flags[key] = true;
+    else {
+      flags[key] = next;
+      i += 1;
+    }
+  }
+  return { command, flags, positional };
+}
+
+function flagString(flags: Args["flags"], key: string): string | undefined {
+  const value = flags[key];
+  return typeof value === "string" ? value : undefined;
+}
+
+function loadFixtures(): Fixture[] {
+  return readdirSync(FIXTURE_DIR)
+    .filter((f) => f.endsWith(".json"))
+    .sort()
+    .map((f) => JSON.parse(readFileSync(join(FIXTURE_DIR, f), "utf8")) as Fixture);
+}
+
+function resolveFixture(idOrPath: string): Fixture {
+  if (idOrPath.endsWith(".json")) {
+    const path = isAbsolute(idOrPath) ? idOrPath : join(process.cwd(), idOrPath);
+    return JSON.parse(readFileSync(path, "utf8")) as Fixture;
+  }
+  const found = loadFixtures().find((f) => f.case.id === idOrPath || f.case.id.startsWith(idOrPath));
+  if (!found) throw new Error(`No frozen case matches "${idOrPath}". Run: quittance cases`);
+  return found;
+}
+
+async function emit(evidence: Evidence, args: Args): Promise<void> {
+  const receipt = buildReceipt(evidence);
+  if (args.flags.json) console.log(JSON.stringify(receipt, null, 2));
+  else console.log(renderText(receipt));
+
+  const webhook = flagString(args.flags, "webhook") ?? process.env.QUITTANCE_WEBHOOK_URL;
+  if (!webhook) return;
+
+  const result = await postReceipt({
+    url: webhook,
+    receipt,
+    secret: flagString(args.flags, "secret") ?? process.env.QUITTANCE_WEBHOOK_SECRET,
+  });
+  if (result.delivered) {
+    console.log(`\nwebhook  delivered to ${result.url} (HTTP ${result.statusCode}) in ${result.attempts} attempt(s)`);
+    if (result.ack) console.log(`ack      ${result.ack.replace(/\s+/g, " ").slice(0, 120)}`);
+  } else {
+    console.log(`\nwebhook  NOT delivered to ${result.url} after ${result.attempts} attempt(s): ${result.error}`);
+    process.exitCode = 2;
+  }
+}
+
+async function cmdCheck(args: Args): Promise<void> {
+  const deposit = flagString(args.flags, "deposit") ?? args.positional[0];
+  const tx = flagString(args.flags, "tx");
+  if (!deposit && !tx) {
+    console.error("Supply --deposit <address> or --tx <near tx hash>.");
+    process.exitCode = 1;
+    return;
+  }
+  const evidence = await gatherEvidence({
+    depositAddress: deposit,
+    memo: flagString(args.flags, "memo"),
+    nearTxHash: tx,
+    apiKey: flagString(args.flags, "key") ?? process.env.QUITTANCE_ONECLICK_KEY,
+    rpc: process.env.QUITTANCE_NEAR_RPC,
+    oneClickBase: process.env.QUITTANCE_ONECLICK_BASE,
+    checkBtcConnector: args.flags.btc === true,
+  });
+  await emit(evidence, args);
+}
+
+async function cmdReplay(args: Args): Promise<void> {
+  const id = flagString(args.flags, "case") ?? args.positional[0];
+  if (!id) {
+    console.error("Usage: quittance replay <case-id>. Run: quittance cases");
+    process.exitCode = 1;
+    return;
+  }
+  const fixture = resolveFixture(id);
+  console.log(`case     ${fixture.case.id}`);
+  console.log(`title    ${fixture.case.title}`);
+  console.log(`frozen   ${fixture.case.frozenAt}\n`);
+  await emit(fixture.evidence, args);
+}
+
+function cmdCases(): void {
+  for (const fixture of loadFixtures()) {
+    console.log(`${fixture.case.id.padEnd(30)} ${fixture.case.expectedLabel.padEnd(19)} ${fixture.case.title}`);
+  }
+}
+
+function cmdVerify(): void {
+  const fixtures = loadFixtures();
+  const durations: number[] = [];
+  let correct = 0;
+
+  console.log("case                           expected            actual              ms");
+  console.log("-".repeat(78));
+  for (const fixture of fixtures) {
+    const started = performance.now();
+    const { verdict } = classify(fixture.evidence);
+    buildReceipt(fixture.evidence);
+    const ms = performance.now() - started;
+    durations.push(ms);
+    const ok = verdict.label === fixture.case.expectedLabel;
+    if (ok) correct += 1;
+    console.log(
+      `${ok ? " " : "x"}${fixture.case.id.padEnd(30)}${fixture.case.expectedLabel.padEnd(20)}${verdict.label.padEnd(20)}${ms.toFixed(1)}`,
+    );
+  }
+
+  const sorted = [...durations].sort((a, b) => a - b);
+  const median = sorted[Math.floor(sorted.length / 2)] ?? 0;
+  console.log("-".repeat(78));
+  console.log(`labels correct        ${correct} of ${fixtures.length}`);
+  console.log(`median classify time  ${median.toFixed(1)} ms (classification only, no network)`);
+  if (correct !== fixtures.length) process.exitCode = 1;
+}
+
+function cmdRules(): void {
+  console.log("Rules are evaluated in this order and the first match wins.\n");
+  RULE_IDS.forEach((id, i) => console.log(`${String(i + 1).padStart(2)}. ${id}`));
+  console.log(`${String(RULE_IDS.length + 1).padStart(2)}. fallback/no-rule-applied`);
+}
+
+function cmdHelp(): void {
+  console.log(`quittance - a receipt for money that crossed chains
+
+  quittance check --deposit <address> [--memo <memo>] [--key <api key>]
+  quittance check --tx <near tx hash>
+  quittance replay <case-id>
+  quittance cases
+  quittance verify
+  quittance rules
+
+Flags
+  --json              print the machine-readable receipt instead of the text one
+  --webhook <url>     post the receipt to an endpoint you control
+  --secret <secret>   sign the webhook body with HMAC SHA256
+  --btc               also read the bitcoin connector refund config
+
+Environment
+  QUITTANCE_ONECLICK_KEY     partner key; without it the tool runs in public-only mode
+  QUITTANCE_WEBHOOK_URL      default webhook target
+  QUITTANCE_NEAR_RPC         override the NEAR RPC endpoint
+
+Quittance only reads. It holds no keys, moves no funds, and opens no support tickets.`);
+}
+
+async function main(): Promise<void> {
+  const args = parseArgs(process.argv.slice(2));
+  switch (args.command) {
+    case "check":
+      await cmdCheck(args);
+      break;
+    case "replay":
+      await cmdReplay(args);
+      break;
+    case "cases":
+      cmdCases();
+      break;
+    case "verify":
+      cmdVerify();
+      break;
+    case "rules":
+      cmdRules();
+      break;
+    default:
+      cmdHelp();
+  }
+}
+
+main().catch((err: unknown) => {
+  console.error(err instanceof Error ? err.message : String(err));
+  process.exitCode = 1;
+});
