@@ -39,7 +39,25 @@ node apps/cli/src/main.ts check --tx 8a33DkKfZMWRKbK2pXuQAWVLXSy4AyZF6PfcENvCJgC
 Expect `LABEL UNDETERMINED` and a limit reading `The 1Click status field was not read because no
 partner key was supplied`. This is the tool refusing to guess, and it is the finding in step 4.
 
-**Step 4 - see the rules themselves.**
+**Step 4 - close the loop into an endpoint you control.**
+
+In one terminal:
+
+```
+QUITTANCE_WEBHOOK_SECRET=demo-secret node apps/sink/src/main.ts
+```
+
+In another:
+
+```
+node apps/cli/src/main.ts replay 01-stranded-trx --webhook http://localhost:8787/receipts --secret demo-secret
+```
+
+The sink prints `received STRANDED rule=stranded/terminal-with-no-refund` and files it under a
+ticket reference derived from the fingerprint. Repeat with `--secret wrong-secret` and the sink
+answers HTTP 401, because the body is signed with HMAC SHA256.
+
+**Step 5 - see the rules themselves.**
 
 ```
 node apps/cli/src/main.ts rules
@@ -111,6 +129,7 @@ packages/core/src/gather.ts       assembles evidence from the readers
 packages/core/src/sources/        1Click status, NEAR RPC, NearBlocks
 packages/core/src/webhook.ts      the only write, HMAC signed
 apps/cli/src/main.ts              check, replay, cases, verify, rules
+apps/sink/src/main.ts             reference receiver, stands in for an integrator endpoint
 fixtures/                         frozen cases with provenance
 ```
 
