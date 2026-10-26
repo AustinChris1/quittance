@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env
+.env.local
+*.log
+.DS_Store
+out/
+
+# Local strategy material, not for the public repo.
+research_notes/
+reports/

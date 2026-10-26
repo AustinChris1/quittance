@@ -1,0 +1,10 @@
+{
+  "name": "quittance",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "quittance": "node apps/cli/src/main.ts",
+    "test": "node --test packages/core/test/*.test.ts"
+  }
+}
