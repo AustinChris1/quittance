@@ -1,3 +1,8 @@
 packages:
   - packages/*
   - apps/*
+
+# pnpm 11 needs these declared explicitly or it refuses the native builds.
+allowBuilds:
+  "@tailwindcss/oxide": true
+  sharp: true

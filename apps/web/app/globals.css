@@ -1,0 +1,93 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #0b141c;
+  --color-ink-raised: #111f2a;
+  --color-ink-line: #1e3140;
+  --color-paper: #f6f4ee;
+  --color-paper-line: #ddd8cc;
+  --color-tally: #15807a;
+  --color-tally-bright: #5fc7bf;
+  --color-caution: #c27318;
+  --color-mute: #8fa3b0;
+
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--color-ink);
+  color: #e6edf2;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--color-tally);
+  color: #fff;
+}
+
+/* The grain that makes the dark field read as a ledger rather than a void. */
+.field-grain {
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--color-ink-line) 55%, transparent) 0 1px,
+      transparent 1px 34px
+    );
+}
+
+.rule-hair {
+  border-color: color-mix(in oklab, var(--color-ink-line) 90%, transparent);
+}
+
+/* Receipt paper, deliberately the inverse of the page. */
+.paper {
+  background: var(--color-paper);
+  color: #14202a;
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--color-paper-line) 60%, transparent) 0 1px,
+      transparent 1px 28px
+    );
+}
+
+.paper-edge {
+  --notch: 7px;
+  -webkit-mask-image: radial-gradient(var(--notch) at 0 50%, transparent 98%, #000 100%),
+    radial-gradient(var(--notch) at 100% 50%, transparent 98%, #000 100%);
+  -webkit-mask-composite: source-in;
+  mask-image: radial-gradient(var(--notch) at 0 50%, transparent 98%, #000 100%),
+    radial-gradient(var(--notch) at 100% 50%, transparent 98%, #000 100%);
+  mask-composite: intersect;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Motion sets an initial opacity of 0, so without JS the page would be blank. */
+@media (scripting: none) {
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

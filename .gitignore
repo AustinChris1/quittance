@@ -13,3 +13,7 @@ out/
 
 # Pitch collateral, rewritten separately. Not published until it matches the findings.
 Quittance-Pitch.pdf
+
+# Next build output
+.next/
+next-env.d.ts

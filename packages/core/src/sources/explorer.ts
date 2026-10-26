@@ -54,6 +54,8 @@ export async function searchExplorer(params: {
   token?: string;
   base?: string;
   limit?: number;
+  /** Retries when the explorer returns 429, which it does at one request per five seconds. */
+  rateLimitRetries?: number;
 }): Promise<ExplorerSearch> {
   const base = params.base ?? DEFAULT_EXPLORER_BASE;
   const url = new URL("/api/v0/transactions", base);
@@ -69,11 +71,21 @@ export async function searchExplorer(params: {
     };
   }
 
-  const res = await readJson<Raw>({
-    name: "intents.explorer.search",
-    url: url.toString(),
-    headers: { Authorization: `Bearer ${params.token}` },
-  });
+  const call = () =>
+    readJson<Raw>({
+      name: "intents.explorer.search",
+      url: url.toString(),
+      headers: { Authorization: `Bearer ${params.token}` },
+    });
+
+  let res = await call();
+
+  // The documented limit is one request every five seconds per partner id.
+  const retries = params.rateLimitRetries ?? 1;
+  for (let attempt = 0; attempt < retries && !res.ok && res.status === 429; attempt += 1) {
+    await new Promise((r) => setTimeout(r, 5500));
+    res = await call();
+  }
 
   if (!res.ok) {
     const note =
