@@ -117,7 +117,20 @@ The sink prints `received STRANDED rule=stranded/terminal-with-no-refund` and fi
 ticket reference derived from the fingerprint. Repeat with `--secret wrong-secret` and the sink
 answers HTTP 401, because the body is signed with HMAC SHA256.
 
-**Step 5 - see the rules themselves.**
+**Step 5 - run the interface.**
+
+```
+pnpm install
+pnpm -C apps/web build && pnpm -C apps/web start
+```
+
+Open http://localhost:3000 for the story, or go straight to a resolved result at
+http://localhost:3000/check?q=8a33DkKfZMWRKbK2pXuQAWVLXSy4AyZF6PfcENvCJgCb
+
+The partner token is read server side and never reaches the browser. Without one the
+interface still runs; it reports what it could not resolve instead of guessing.
+
+**Step 6 - see the rules themselves.**
 
 ```
 node apps/cli/src/main.ts rules
@@ -208,6 +221,7 @@ packages/core/src/sources/        1Click status, NEAR RPC, NearBlocks
 packages/core/src/webhook.ts      the only write, HMAC signed
 apps/cli/src/main.ts              check, replay, cases, verify, rules
 apps/sink/src/main.ts             reference receiver, stands in for an integrator endpoint
+apps/web                          landing page and the resolver interface
 packages/core/src/study.ts        population measurement, aggregates only
 studies/                          dated snapshots of that measurement
 fixtures/                         frozen cases with provenance
