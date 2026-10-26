@@ -49,6 +49,8 @@ export type StatusEvidence =
       amountInFormatted?: string;
       amountOut?: string;
       refundedAmount?: string;
+      /** False when the source cannot report a refund amount, so absence proves nothing. */
+      refundAmountKnown?: boolean;
       refundReason?: string | null;
       originChainTxHashes: TxRef[];
       destinationChainTxHashes: TxRef[];

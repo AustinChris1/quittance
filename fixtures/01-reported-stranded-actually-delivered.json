@@ -1,0 +1,119 @@
+{
+  "case": {
+    "id": "01-reported-stranded-actually-delivered",
+    "expectedLabel": "DELIVERED",
+    "title": "Reported publicly as 193K stranded, actually delivered 12 days before the complaint",
+    "frozenAt": "2026-10-26",
+    "provenance": {
+      "summary": "This case was built from a public forum report claiming the swap had read FAILED since 2026-09-12 with a zero refund. Resolving it through the Explorer API and then verifying the destination transaction on Ethereum showed the swap settled. The reported status was wrong, and this fixture records the correction rather than the claim.",
+      "timeline": [
+        "2026-09-11T16:25:30Z quote created, 575830 TRX in, per the NEAR Intents Explorer record.",
+        "2026-09-11T16:27:04Z 575830.000000 TRX credited to intents.near, read from the NEAR transaction.",
+        "2026-09-27T11:16:35Z 190995.293894 USDT transferred to 0x632f5d32448de43b8b9cfd063acfcdac09108bad on Ethereum, block 26068435, receipt status success.",
+        "The 1Click status endpoint reports SUCCESS with updatedAt 2026-09-27T11:16:47.000Z, matching the Ethereum block time.",
+        "2026-10-09 forum thread 42664 states the swap has read FAILED since 2026-09-12 with refundedAmount 0 and no support response."
+      ],
+      "note": "The poster cited refundedAmount 0 as evidence of loss. On a settled swap that field is correctly zero because no refund was due. Settlement took 16 days, which is why a status read during that window was so misleading.",
+      "verifiedIndependently": "The destination transfer was confirmed by querying an Ethereum node directly, not by trusting the operator record. Amount, recipient and receipt status all match.",
+      "links": [
+        "https://gov.near.org/t/failed-near-intents-1-click-swap-575-830-trx-193k-stuck-failed-status-zero-refund-no-support-response/42664",
+        "https://nearblocks.io/txns/8a33DkKfZMWRKbK2pXuQAWVLXSy4AyZF6PfcENvCJgCb",
+        "https://etherscan.io/tx/0x9be9c2f8ed78d32ecf222bca3595d50cc42aed979030e4ebf0f84a626e13421a"
+      ],
+      "correlationIdNote": "The correlation id quoted in the forum thread identifies one HTTP request, not the swap. Three consecutive status calls for this deposit returned three different ids, and the specification describes the field as a unique identifier for request tracing and debugging. It cannot be looked up by anyone, including the operator."
+    }
+  },
+  "evidence": {
+    "input": {
+      "depositAddress": "TBy2io3Q3Jt4UM4ejDhkkUQJZgZuXw2sus",
+      "nearTxHash": "8a33DkKfZMWRKbK2pXuQAWVLXSy4AyZF6PfcENvCJgCb"
+    },
+    "fetchedAt": "2026-10-26T00:00:00.000Z",
+    "mode": "authenticated",
+    "status": {
+      "available": true,
+      "status": "SUCCESS",
+      "correlationId": "9150221e-a8a6-47d0-b9ec-337cb68ff9c5",
+      "updatedAt": "2026-09-27T11:16:47.000Z",
+      "depositType": "ORIGIN_CHAIN",
+      "recipientType": "DESTINATION_CHAIN",
+      "originAsset": "nep141:tron.omft.near",
+      "destinationAsset": "nep141:eth-0xdac17f958d2ee523a2206206994597c13d831ec7.omft.near",
+      "recipient": "0x632F5D32448DE43b8b9cfD063aCfcDac09108bad",
+      "refundTo": "TKjQKG4YauwAxgdfZueoKDuLe4LzqnfS1z",
+      "amountIn": "575830000000",
+      "amountInFormatted": "575830.0",
+      "amountOut": "190995293894",
+      "refundAmountKnown": true,
+      "refundReason": null,
+      "originChainTxHashes": [
+        {
+          "chain": "origin",
+          "hash": "d9b9c4c3c88f99d78e9484871eaa8b1ee938bd67aad2093341817a600b8cfd67"
+        }
+      ],
+      "destinationChainTxHashes": [
+        {
+          "chain": "destination",
+          "hash": "0x9be9c2f8ed78d32ecf222bca3595d50cc42aed979030e4ebf0f84a626e13421a"
+        }
+      ],
+      "nearTxHashes": [
+        "8a33DkKfZMWRKbK2pXuQAWVLXSy4AyZF6PfcENvCJgCb",
+        "E887Y77MhajfbvNg7x1HbPAHPo7vzNs8JnFC5Ed15nmB"
+      ],
+      "intentHashes": [],
+      "refundedAmount": "0"
+    },
+    "chain": {
+      "checked": true,
+      "deposits": [
+        {
+          "chain": "near",
+          "tx": {
+            "chain": "near",
+            "hash": "8a33DkKfZMWRKbK2pXuQAWVLXSy4AyZF6PfcENvCJgCb",
+            "explorerUrl": "https://nearblocks.io/txns/8a33DkKfZMWRKbK2pXuQAWVLXSy4AyZF6PfcENvCJgCb",
+            "confirmed": true
+          },
+          "token": "TRX",
+          "amount": "575830.000000",
+          "creditedTo": "intents.near",
+          "blockTimestampIso": "2026-09-11T16:27:04.048Z"
+        }
+      ],
+      "creditedTo": {
+        "account": "intents.near",
+        "token": "TRX",
+        "amount": "575830.000000"
+      }
+    },
+    "sources": [
+      {
+        "name": "intents.explorer.search",
+        "url": "https://explorer.near-intents.org/api/v0/transactions?search=8a33DkKfZMWRKbK2pXuQAWVLXSy4AyZF6PfcENvCJgCb",
+        "readAt": "2026-10-26T00:00:00.000Z",
+        "ok": true,
+        "detail": "HTTP 200"
+      },
+      {
+        "name": "nearblocks.txn",
+        "url": "https://api.nearblocks.io/v1/txns/8a33DkKfZMWRKbK2pXuQAWVLXSy4AyZF6PfcENvCJgCb",
+        "readAt": "2026-10-26T00:00:00.000Z",
+        "ok": true
+      },
+      {
+        "name": "ethereum.receipt",
+        "url": "https://etherscan.io/tx/0x9be9c2f8ed78d32ecf222bca3595d50cc42aed979030e4ebf0f84a626e13421a",
+        "readAt": "2026-10-26T00:00:00.000Z",
+        "ok": true,
+        "detail": "block 26068435, 190995.293894 USDT, receipt status success"
+      }
+    ],
+    "notes": [
+      "Settlement took 16 days. A status read at any point in that window would have been misleading.",
+      "The public report of this swap as stranded was filed 12 days after delivery.",
+      "The correlation id is a per-request trace and changes on every call, so the identifier the complaint quotes was never resolvable."
+    ]
+  }
+}

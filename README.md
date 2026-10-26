@@ -8,6 +8,26 @@ behind it. It holds no keys, moves no funds, and opens no support tickets.
 
 A quittance is an old legal word for a written receipt proving an obligation has been discharged.
 
+## What it found on its first real case
+
+The most cited stuck deposit in the ecosystem, 575,830 TRX reported on the NEAR forum as roughly
+193,000 dollars lost, had already been delivered when the complaint was filed.
+
+| When | What | Verified against |
+| --- | --- | --- |
+| 2026-09-11 16:25:30Z | Quote created, 575,830 TRX in | Intents Explorer record |
+| 2026-09-11 16:27:04Z | 575,830 TRX credited to `intents.near` | NEAR chain |
+| 2026-09-27 11:16:35Z | 190,995.293894 USDT delivered to `0x632f...8bad` | Ethereum block 26,068,435 |
+| 2026-10-09 | Forum post: FAILED since 12 Sep, zero refund, no reply | gov.near.org thread 42664 |
+
+Settlement took 16 days. The public report of a loss was filed 12 days after the money arrived,
+and the thread is still open and still unanswered. The poster cited `refundedAmount: 0` as proof
+they got nothing back, when on a settled swap that field is correctly zero because no refund was
+due. A healthy field read as a symptom.
+
+The Ethereum transfer was confirmed by querying an Ethereum node directly, not by trusting the
+operator's record. That is the whole thesis: a status word is not an answer, in either direction.
+
 ## Run it
 
 No install. The core has zero runtime dependencies and Node runs the TypeScript directly.
@@ -19,16 +39,16 @@ Requires Node 24 or newer (`node --version`).
 node apps/cli/src/main.ts verify
 ```
 
-Expect `labels correct 7 of 7` and a median classify time around 0.1 ms.
+Expect `labels correct 10 of 10` and a median classify time under a millisecond.
 
-**Step 2 - print the receipt for the flagship case.**
+**Step 2 - print the receipt for the case above.**
 
 ```
-node apps/cli/src/main.ts replay 01-stranded-trx
+node apps/cli/src/main.ts replay 01-reported-stranded-actually-delivered
 ```
 
-Expect `LABEL STRANDED`, rule `stranded/terminal-with-no-refund`, and a basis line reading
-`575830.000000 TRX was credited to intents.near`.
+Expect `LABEL DELIVERED` and the published destination transaction, against a forum thread that
+still says the money is gone.
 
 **Step 3 - read live from mainnet, with no key of any kind.**
 
@@ -41,6 +61,16 @@ The first proves the chain facts and returns `UNDETERMINED`, because a NEAR tran
 not tell you what the operator thinks happened. The second calls the status endpoint with no
 credentials at all; its receipt cites `HTTP 404 unauthenticated, limit 1200`, which is the server
 confirming it processed an anonymous lookup.
+
+**Step 3b - resolve the whole thing, if you have a partner JWT in `.env`.**
+
+```
+node apps/cli/src/main.ts check --search 8a33DkKfZMWRKbK2pXuQAWVLXSy4AyZF6PfcENvCJgCb
+```
+
+This is the full chain: a transaction hash resolves through the Explorer to its deposit address,
+the status fields come back, and the verdict turns from `UNDETERMINED` into `DELIVERED`. It is the
+one thing a partner token genuinely unlocks.
 
 **Step 4 - close the loop into an endpoint you control.**
 
@@ -81,10 +111,17 @@ unauthenticated when a supplied key returns 401, and records which tier the serv
 receipt's `sources`. A partner key governs the quote fee schedule, where unauthenticated quotes
 carry an extra 0.25 percent platform fee. It is not a gate on reading.
 
-The real barrier is the shape of the lookup. `/v0/status` accepts a deposit address plus an
-optional memo, and nothing else. There is no correlation-id parameter. Someone holding only the
-tracking number from a support thread, which is what failure reports actually quote, cannot look
-their swap up at all. That is why the flagship case is keyed from a NEAR transaction hash instead.
+The real barrier is the shape of the lookup, and it is worse than a missing parameter.
+`/v0/status` accepts a deposit address plus an optional memo, and nothing else. There is no
+correlation-id parameter, and there could not usefully be one: the correlation id is a per-request
+trace, not a swap identifier. Three consecutive calls for the same swap returned
+`7ff00f92-...`, `b9784595-...` and `98b41cc8-...`. The specification says as much, describing it as
+a "unique identifier for request tracing and debugging".
+
+So when a support thread quotes a correlation id as the handle for a stuck swap, which is exactly
+what the case above does, it is quoting the id of one HTTP request made weeks earlier. Nobody can
+resolve it, including the operator. That is why Quittance keys from a transaction hash and
+resolves through the Explorer instead.
 
 ## The labels
 
@@ -122,16 +159,17 @@ open and unanswered in `near/intents` when they were recorded.
 
 | Case | Source |
 | --- | --- |
-| `01-stranded-trx` | [Forum thread 42664](https://gov.near.org/t/failed-near-intents-1-click-swap-575-830-trx-193k-stuck-failed-status-zero-refund-no-support-response/42664) and [the transaction](https://nearblocks.io/txns/8a33DkKfZMWRKbK2pXuQAWVLXSy4AyZF6PfcENvCJgCb) |
+| `01-reported-stranded-actually-delivered` | [Forum thread 42664](https://gov.near.org/t/failed-near-intents-1-click-swap-575-830-trx-193k-stuck-failed-status-zero-refund-no-support-response/42664), the [NEAR deposit](https://nearblocks.io/txns/8a33DkKfZMWRKbK2pXuQAWVLXSy4AyZF6PfcENvCJgCb) and the [Ethereum delivery](https://etherscan.io/tx/0x9be9c2f8ed78d32ecf222bca3595d50cc42aed979030e4ebf0f84a626e13421a) |
 | `02-wrong-door-base-eth` | [near/intents#382](https://github.com/near/intents/issues/382) |
 | `03-locked-out-btc` | [near/intents#385](https://github.com/near/intents/issues/385) |
 | `04-shielded-unproven` | [near/intents#384](https://github.com/near/intents/issues/384) |
-| `05`, `06`, `07` | Synthetic controls, so the rules are shown not to label every swap a failure |
+| `05`, `06`, `08`, `09` | Controls and regression guards, so the rules are shown not to label every swap a failure |
+| `10-stranded-synthetic` | Synthetic. We hold no verified real STRANDED case, and say so rather than implying one |
 
-On case 01 the chain is the better witness. The deposit confirms at block 215,243,812 with a
-block timestamp of 2026-09-11T16:27:04Z, one day earlier than the forum post states. The status
-fields in that fixture are the depositor's report and are marked unverified in its provenance
-block, because reading them needs a partner key.
+On case 01 the chain was the better witness, and it overturned the report. The deposit confirms at
+block 215,243,812 with a block timestamp of 2026-09-11T16:27:04Z, one day earlier than the forum
+post states, and the Ethereum delivery lands on 2026-09-27. The fixture records the correction,
+not the claim, and its provenance block carries the full timeline.
 
 ## Layout
 

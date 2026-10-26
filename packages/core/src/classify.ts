@@ -117,6 +117,8 @@ const RULES: Rule[] = [
       if (!e.status.available) return false;
       const terminal = e.status.status === "FAILED" || e.status.status === "REFUNDED";
       if (!terminal) return false;
+      // A source that cannot report a refund amount proves nothing by its absence.
+      if (e.status.status === "REFUNDED" && e.status.refundAmountKnown === false) return false;
       const refunded = !isZero(e.status.refundedAmount) || e.chain.refundTx !== undefined;
       return !refunded && depositLanded(e);
     },

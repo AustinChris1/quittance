@@ -1,0 +1,50 @@
+{
+  "case": {
+    "id": "10-stranded-synthetic",
+    "expectedLabel": "STRANDED",
+    "title": "Terminal status, deposit credited, refund field genuinely zero",
+    "frozenAt": "2026-10-26",
+    "provenance": {
+      "status": "Synthetic. The case that previously occupied this slot was a public report of a stranded deposit that we disproved: see 01-reported-stranded-actually-delivered. We hold no verified real STRANDED case, and say so rather than implying one."
+    }
+  },
+  "evidence": {
+    "input": {
+      "depositAddress": "0x0000000000000000000000000000000000000010"
+    },
+    "fetchedAt": "2026-10-26T00:00:00.000Z",
+    "mode": "authenticated",
+    "status": {
+      "available": true,
+      "status": "FAILED",
+      "correlationId": "00000000-0000-4000-8000-000000000010",
+      "updatedAt": "2026-10-01T00:00:00.000Z",
+      "depositType": "ORIGIN_CHAIN",
+      "recipientType": "DESTINATION_CHAIN",
+      "originAsset": "nep141:wrap.near",
+      "refundedAmount": "0",
+      "refundAmountKnown": true,
+      "refundReason": null,
+      "originChainTxHashes": [
+        {
+          "chain": "near",
+          "hash": "originhash0000000000000000000000000000000010"
+        }
+      ],
+      "destinationChainTxHashes": [],
+      "nearTxHashes": [],
+      "intentHashes": []
+    },
+    "chain": {
+      "checked": true,
+      "deposits": [],
+      "creditedTo": {
+        "account": "intents.near",
+        "token": "wNEAR",
+        "amount": "1200.000000"
+      }
+    },
+    "sources": [],
+    "notes": []
+  }
+}

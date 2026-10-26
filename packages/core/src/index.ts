@@ -19,4 +19,10 @@ export {
   BTC_CONNECTOR,
   DOCUMENTED_BTC_REFUND_TIMELOCK_SEC,
 } from "./sources/near.ts";
+export {
+  searchExplorer,
+  statusFromExplorer,
+  DEFAULT_EXPLORER_BASE,
+  type ExplorerRecord,
+} from "./sources/explorer.ts";
 export { postReceipt, type WebhookResult } from "./webhook.ts";

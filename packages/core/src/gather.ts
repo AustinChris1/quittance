@@ -2,15 +2,20 @@ import type { ChainEvidence, Evidence, SourceRef } from "./types.ts";
 import { readOneClickStatus } from "./sources/oneclick.ts";
 import { readNearTx } from "./sources/nearblocks.ts";
 import { ftBalanceOf, readBtcConnectorConfig } from "./sources/near.ts";
+import { searchExplorer, statusFromExplorer, type ExplorerRecord } from "./sources/explorer.ts";
 
 export type GatherOptions = {
   depositAddress?: string;
   memo?: string;
   nearTxHash?: string;
+  /** Any identifier the explorer can search: a transaction hash, a recipient or a sender. */
+  search?: string;
   apiKey?: string;
+  explorerToken?: string;
   rpc?: string;
   oneClickBase?: string;
   nearblocksBase?: string;
+  explorerBase?: string;
   /** Read the bitcoin connector config even when the route is not obviously BTC. */
   checkBtcConnector?: boolean;
 };
@@ -26,37 +31,78 @@ function looksBitcoin(...values: (string | undefined)[]): boolean {
   return values.some((v) => typeof v === "string" && /btc|bitcoin/i.test(v));
 }
 
+/** Base58 of 32 bytes, which is what a NEAR transaction hash looks like. */
+function looksNearTxHash(value?: string): boolean {
+  return value !== undefined && /^[1-9A-HJ-NP-Za-km-z]{43,44}$/.test(value);
+}
+
 export async function gatherEvidence(options: GatherOptions): Promise<Evidence> {
   const sources: SourceRef[] = [];
   const notes: string[] = [];
   const fetchedAt = new Date().toISOString();
 
-  if (!options.depositAddress && !options.nearTxHash) {
-    throw new Error("Supply a deposit address, or a NEAR transaction hash, to gather evidence.");
+  if (!options.depositAddress && !options.nearTxHash && !options.search) {
+    throw new Error("Supply a deposit address, a NEAR transaction hash, or a search term.");
+  }
+
+  let depositAddress = options.depositAddress;
+  let memo = options.memo;
+  let explorerRecord: ExplorerRecord | undefined;
+
+  // The status endpoint is keyed by deposit address only, so other identifiers resolve first.
+  const searchTerm = options.search ?? (depositAddress ? undefined : options.nearTxHash);
+  if (!depositAddress && searchTerm) {
+    const found = await searchExplorer({
+      query: searchTerm,
+      token: options.explorerToken,
+      base: options.explorerBase,
+    });
+    sources.push(...found.sources);
+    if (found.note) notes.push(found.note);
+    const match = found.records.find((r) => r.depositAddress);
+    if (match) {
+      depositAddress = match.depositAddress;
+      memo = memo ?? match.depositMemo;
+      explorerRecord = match;
+      notes.push(`Resolved ${searchTerm} to deposit address ${depositAddress} through the Explorer API.`);
+    } else if (!found.needsToken && found.records.length === 0) {
+      notes.push(`The Explorer API returned no swap matching ${searchTerm}.`);
+    }
   }
 
   let status: Evidence["status"] = {
     available: false,
-    reason: "No deposit address was supplied, so the status endpoint was not called.",
+    reason: "No deposit address was available, so the status endpoint was not called.",
   };
-  if (!options.depositAddress) notes.push(status.available ? "" : status.reason);
 
-  if (options.depositAddress) {
+  if (depositAddress) {
     const read = await readOneClickStatus({
-      depositAddress: options.depositAddress,
-      memo: options.memo,
+      depositAddress,
+      memo,
       apiKey: options.apiKey,
       base: options.oneClickBase,
     });
     status = read.evidence;
     sources.push(...read.sources);
-    if (!read.evidence.available) notes.push(read.evidence.reason);
   }
 
-  const chain: ChainEvidence = { deposits: [], checked: false };
+  // The explorer record carries the same fields and is a usable fallback.
+  if (!status.available && explorerRecord) {
+    const fromExplorer = statusFromExplorer(explorerRecord);
+    if (fromExplorer.available) {
+      notes.push("Status fields were taken from the explorer record, not the status endpoint.");
+      status = fromExplorer;
+    }
+  }
 
+  if (!status.available) notes.push(status.reason);
+
+  const chain: ChainEvidence = { deposits: [], checked: false };
+  // A search term that is itself a NEAR transaction still yields chain evidence if resolution failed.
   const nearTxHash =
-    options.nearTxHash ?? (status.available ? status.nearTxHashes[0] : undefined);
+    options.nearTxHash ??
+    (status.available ? status.nearTxHashes[0] : undefined) ??
+    (looksNearTxHash(searchTerm) ? searchTerm : undefined);
 
   if (nearTxHash) {
     const tx = await readNearTx({ hash: nearTxHash, base: options.nearblocksBase });
@@ -95,17 +141,10 @@ export async function gatherEvidence(options: GatherOptions): Promise<Evidence> 
     const read = await readBtcConnectorConfig(options.rpc);
     sources.push(read.source);
     connector = read.connector;
-    if (status.available && !status.refundTo) {
-      notes.push("The quote carries no refund address, which is what puts a stuck deposit behind the connector timelock.");
-    }
   }
 
   return {
-    input: {
-      depositAddress: options.depositAddress,
-      memo: options.memo,
-      nearTxHash,
-    },
+    input: { depositAddress, memo, nearTxHash },
     fetchedAt,
     mode: options.apiKey ? "authenticated" : "unauthenticated",
     status,

@@ -11,6 +11,13 @@ import type { Evidence } from "../../../packages/core/src/types.ts";
 const ROOT = join(import.meta.dirname, "../../..");
 const FIXTURE_DIR = join(ROOT, "fixtures");
 
+// Secrets live in .env, which is gitignored. Absent is fine; most reads need no credentials.
+try {
+  process.loadEnvFile(join(ROOT, ".env"));
+} catch {
+  // no .env present
+}
+
 type Fixture = {
   case: { id: string; expectedLabel: string; title: string; frozenAt: string; provenance?: unknown };
   evidence: Evidence;
@@ -86,8 +93,9 @@ async function emit(evidence: Evidence, args: Args): Promise<void> {
 async function cmdCheck(args: Args): Promise<void> {
   const deposit = flagString(args.flags, "deposit") ?? args.positional[0];
   const tx = flagString(args.flags, "tx");
-  if (!deposit && !tx) {
-    console.error("Supply --deposit <address> or --tx <near tx hash>.");
+  const search = flagString(args.flags, "search");
+  if (!deposit && !tx && !search) {
+    console.error("Supply --deposit <address>, --tx <near tx hash>, or --search <tx hash or recipient>.");
     process.exitCode = 1;
     return;
   }
@@ -95,7 +103,12 @@ async function cmdCheck(args: Args): Promise<void> {
     depositAddress: deposit,
     memo: flagString(args.flags, "memo"),
     nearTxHash: tx,
+    search: flagString(args.flags, "search"),
     apiKey: flagString(args.flags, "key") ?? process.env.QUITTANCE_ONECLICK_KEY,
+    explorerToken:
+      flagString(args.flags, "token") ??
+      process.env.QUITTANCE_PARTNER_JWT ??
+      process.env.QUITTANCE_ONECLICK_KEY,
     rpc: process.env.QUITTANCE_NEAR_RPC,
     oneClickBase: process.env.QUITTANCE_ONECLICK_BASE,
     checkBtcConnector: args.flags.btc === true,
