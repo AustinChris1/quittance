@@ -110,7 +110,7 @@ QUITTANCE_WEBHOOK_SECRET=demo-secret node apps/sink/src/main.ts
 In another:
 
 ```
-node apps/cli/src/main.ts replay 01-stranded-trx --webhook http://localhost:8787/receipts --secret demo-secret
+node apps/cli/src/main.ts replay 10-stranded-synthetic --webhook http://localhost:8787/receipts --secret demo-secret
 ```
 
 The sink prints `received STRANDED rule=stranded/terminal-with-no-refund` and files it under a
