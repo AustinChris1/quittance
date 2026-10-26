@@ -1,0 +1,6 @@
+research_notes/
+reports/
+studies/
+*.pdf
+.next/
+node_modules/

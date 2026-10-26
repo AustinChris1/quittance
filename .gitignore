@@ -17,3 +17,8 @@ Quittance-Pitch.pdf
 # Next build output
 .next/
 next-env.d.ts
+
+.vercel
+
+# Vercel
+.vercel
