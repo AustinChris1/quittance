@@ -1,47 +1,49 @@
 import Link from "next/link";
-import { ArrowRight, FileCheck2, KeyRound, ShieldOff, Github } from "lucide-react";
+import {
+  ArrowRight,
+  CheckCircle2,
+  CircleHelp,
+  DoorOpen,
+  EyeOff,
+  FileCheck2,
+  Github,
+  KeyRound,
+  Lock,
+  PackageX,
+  RotateCcw,
+  ShieldOff,
+  Timer,
+} from "lucide-react";
 import { TallyMark, Wordmark } from "../components/logo";
 import { Reveal } from "../components/reveal";
+import { TallyMatch } from "../components/tally-match";
+import { Journey } from "../components/journey";
+import { CHAINS } from "../components/chains";
 
-const TIMELINE = [
-  {
-    when: "11 Sep, 16:25 UTC",
-    what: "Quote created. 575,830 TRX in.",
-    source: "Intents Explorer record",
-  },
-  {
-    when: "11 Sep, 16:27 UTC",
-    what: "575,830 TRX credited to intents.near.",
-    source: "NEAR chain",
-  },
-  {
-    when: "27 Sep, 11:16 UTC",
-    what: "190,995.29 USDT delivered to the recipient.",
-    source: "Ethereum, block 26,068,435",
-    settled: true,
-  },
-  {
-    when: "9 Oct",
-    what: "Reported on the forum as failed since 12 Sep, zero refund, no reply.",
-    source: "gov.near.org thread 42664",
-    wrong: true,
-  },
+const LABELS = [
+  { name: "Delivered", Icon: CheckCircle2, tone: "text-tally-bright" },
+  { name: "Refunded", Icon: RotateCcw, tone: "text-tally-bright" },
+  { name: "In flight", Icon: Timer, tone: "text-[#c3d2dc]" },
+  { name: "Stranded", Icon: PackageX, tone: "text-caution" },
+  { name: "Wrong door", Icon: DoorOpen, tone: "text-caution" },
+  { name: "Locked out", Icon: Lock, tone: "text-caution" },
+  { name: "Shielded", Icon: EyeOff, tone: "text-[#c3d2dc]" },
+  { name: "Undetermined", Icon: CircleHelp, tone: "text-mute" },
 ];
 
 const REFUSALS = [
-  { icon: KeyRound, title: "Holds no keys", body: "Every read is read-only. There is nothing to steal." },
-  { icon: ShieldOff, title: "Claims no recoveries", body: "No figure for money rescued appears anywhere." },
-  { icon: FileCheck2, title: "Files nothing for you", body: "It produces the attachment. A human decides to send it." },
+  { Icon: KeyRound, title: "Holds no keys", body: "Every read is read-only." },
+  { Icon: ShieldOff, title: "Claims no recoveries", body: "No figure for money rescued." },
+  { Icon: FileCheck2, title: "Files nothing for you", body: "You decide what to send." },
 ];
 
-function Stat({ value, label, hint }: { value: string; label: string; hint?: string }) {
+function Stat({ value, label }: { value: string; label: string }) {
   return (
     <div className="rule-hair border-t pt-5">
-      <div className="font-[family-name:var(--font-display)] text-4xl leading-none text-tally-bright sm:text-5xl">
+      <div className="font-[family-name:var(--font-display)] text-[clamp(2.4rem,5vw,3.4rem)] leading-none text-tally-bright">
         {value}
       </div>
-      <div className="mt-2.5 text-sm font-medium text-[#dbe5ec]">{label}</div>
-      {hint ? <div className="mt-1 text-[0.8rem] leading-relaxed text-mute">{hint}</div> : null}
+      <div className="mt-3 text-sm leading-relaxed text-[#b8c7d2]">{label}</div>
     </div>
   );
 }
@@ -69,87 +71,79 @@ export default function Home() {
         </nav>
       </header>
 
-      <section className="relative mx-auto max-w-6xl px-6 pt-16 pb-24 sm:pt-24">
+      <section className="relative mx-auto max-w-6xl px-6 pt-12 pb-20 sm:pt-20">
+        <div className="grid items-center gap-14 lg:grid-cols-[1.15fr_0.85fr]">
+          <div className="min-w-0">
+            <Reveal>
+              <p className="font-[family-name:var(--font-mono)] text-xs tracking-[0.18em] text-tally-bright uppercase">
+                NEAR Intents, resolved
+              </p>
+            </Reveal>
+            <Reveal delay={0.06}>
+              <h1 className="mt-6 font-[family-name:var(--font-display)] text-[clamp(1.95rem,7vw,4.6rem)] leading-[1.02] tracking-[-0.02em] text-balance">
+                A receipt for money
+                <br className="hidden sm:inline" /> that crossed chains.
+              </h1>
+            </Reveal>
+            <Reveal delay={0.12}>
+              <p className="mt-7 max-w-md text-lg leading-relaxed text-[#b8c7d2]">
+                Paste a transaction hash. Get back what actually happened, with the proof attached.
+              </p>
+            </Reveal>
+            <Reveal delay={0.18}>
+              <div className="mt-9 flex flex-wrap items-center gap-x-5 gap-y-3">
+                <Link
+                  href="/check"
+                  className="group inline-flex items-center gap-2 rounded-full bg-paper px-6 py-3.5 font-medium text-ink transition-transform hover:-translate-y-0.5"
+                >
+                  Check a swap
+                  <ArrowRight size={17} className="transition-transform group-hover:translate-x-0.5" />
+                </Link>
+                <span className="font-[family-name:var(--font-mono)] text-sm text-mute">
+                  no wallet, read only
+                </span>
+              </div>
+            </Reveal>
+          </div>
+
+          <Reveal delay={0.2}>
+            <TallyMatch className="mx-auto max-w-sm text-[#dbe5ec]" />
+          </Reveal>
+        </div>
+      </section>
+
+      <section className="relative mx-auto max-w-6xl px-6 pb-20">
         <Reveal>
-          <p className="font-[family-name:var(--font-mono)] text-xs uppercase tracking-[0.18em] text-tally-bright">
-            NEAR Intents, resolved
-          </p>
-        </Reveal>
-        <Reveal delay={0.06}>
-          <h1 className="mt-6 max-w-4xl font-[family-name:var(--font-display)] text-[clamp(2.6rem,7vw,5.2rem)] leading-[0.98] tracking-[-0.02em]">
-            A receipt for money
-            <br />
-            that crossed chains.
-          </h1>
-        </Reveal>
-        <Reveal delay={0.12}>
-          <p className="mt-8 max-w-xl text-lg leading-relaxed text-[#b8c7d2]">
-            Paste a transaction hash. Quittance reads the public record, works out what actually
-            happened to the swap, and hands back the evidence behind its answer.
-          </p>
-        </Reveal>
-        <Reveal delay={0.18}>
-          <div className="mt-10 flex flex-wrap items-center gap-4">
-            <Link
-              href="/check"
-              className="group inline-flex items-center gap-2 rounded-full bg-paper px-6 py-3.5 font-medium text-ink transition-transform hover:-translate-y-0.5"
-            >
-              Check a swap
-              <ArrowRight size={17} className="transition-transform group-hover:translate-x-0.5" />
-            </Link>
-            <span className="font-[family-name:var(--font-mono)] text-sm text-mute">
-              no wallet, no signing, read only
+          <div className="rule-hair flex flex-wrap items-center gap-x-10 gap-y-6 border-t pt-7">
+            <span className="font-[family-name:var(--font-mono)] text-xs tracking-wide text-mute uppercase">
+              Reads across
             </span>
+            {CHAINS.map(({ name, Mark }) => (
+              <span key={name} className="flex items-center gap-2.5 text-mute transition-colors hover:text-[#dbe5ec]">
+                <Mark size={21} />
+                <span className="text-sm">{name}</span>
+              </span>
+            ))}
           </div>
         </Reveal>
       </section>
 
       <section className="relative mx-auto max-w-6xl px-6 pb-24">
         <Reveal>
-          <h2 className="font-[family-name:var(--font-display)] text-[clamp(1.9rem,3.6vw,2.8rem)] leading-tight tracking-[-0.015em]">
+          <h2 className="font-[family-name:var(--font-display)] text-[clamp(1.6rem,4.4vw,2.8rem)] leading-tight tracking-[-0.015em]">
             The case it was built on was wrong.
           </h2>
-          <p className="mt-5 max-w-2xl leading-relaxed text-[#b8c7d2]">
-            A deposit of roughly 193,000 dollars was reported publicly as lost. Resolving it took
-            one transaction hash. The money had already arrived.
+          <p className="mt-4 max-w-xl leading-relaxed text-[#b8c7d2]">
+            A $193,000 deposit, reported publicly as lost. One hash resolved it.
           </p>
         </Reveal>
 
-        <ol className="mt-12 space-y-px">
-          {TIMELINE.map((row, i) => (
-            <Reveal key={row.when} delay={i * 0.05}>
-              <li
-                className={`rule-hair grid grid-cols-1 gap-2 border-t py-5 sm:grid-cols-[180px_1fr_auto] sm:items-baseline sm:gap-6 ${
-                  row.settled ? "text-[#eaf3f2]" : ""
-                }`}
-              >
-                <span className="font-[family-name:var(--font-mono)] text-sm text-mute">
-                  {row.when}
-                </span>
-                <span
-                  className={`leading-relaxed ${
-                    row.settled
-                      ? "text-tally-bright"
-                      : row.wrong
-                        ? "text-caution"
-                        : "text-[#dbe5ec]"
-                  }`}
-                >
-                  {row.what}
-                </span>
-                <span className="font-[family-name:var(--font-mono)] text-xs text-mute">
-                  {row.source}
-                </span>
-              </li>
-            </Reveal>
-          ))}
-        </ol>
+        <Journey />
 
         <Reveal delay={0.1}>
-          <p className="rule-hair mt-10 max-w-2xl border-l-2 border-l-tally pl-5 leading-relaxed text-[#b8c7d2]">
-            Delivered twelve days before the complaint was filed. The thread is still open and
-            still unanswered. The poster cited a refund field reading zero as proof they got
-            nothing back, when on a settled swap that is exactly what it should read.
+          <p className="mt-10 max-w-2xl border-l-2 border-l-tally pl-5 leading-relaxed text-[#b8c7d2]">
+            The poster cited a refund field reading zero as proof of loss. On a settled swap that is
+            the correct value.
           </p>
         </Reveal>
       </section>
@@ -157,36 +151,29 @@ export default function Home() {
       <section className="relative border-t border-t-[#16242f] bg-[#0a1219]">
         <div className="mx-auto max-w-6xl px-6 py-24">
           <Reveal>
-            <h2 className="font-[family-name:var(--font-display)] text-[clamp(1.9rem,3.6vw,2.8rem)] leading-tight tracking-[-0.015em]">
+            <h2 className="font-[family-name:var(--font-display)] text-[clamp(1.6rem,4.4vw,2.8rem)] leading-tight tracking-[-0.015em]">
               Not a broken system. An unanswerable one.
             </h2>
-            <p className="mt-5 max-w-2xl leading-relaxed text-[#b8c7d2]">
-              In a one hour window, 978 of 1,000 swaps settled. The failures are mostly quotes that
-              never received a deposit. The problem is the tail, and the fact that nobody in it can
-              get an answer.
+            <p className="mt-4 max-w-xl leading-relaxed text-[#b8c7d2]">
+              978 of 1,000 swaps settle. The problem is the tail nobody can see into.
             </p>
           </Reveal>
 
           <div className="mt-14 grid gap-10 sm:grid-cols-3">
             <Reveal delay={0.04}>
-              <Stat
-                value="44"
-                label="swaps took a deposit and went nowhere"
-                hint="No destination transaction, no refund charged."
-              />
+              <Stat value="44" label="swaps took a deposit and went nowhere" />
             </Reveal>
             <Reveal delay={0.1}>
-              <Stat value="$334k" label="of quoted notional sitting in them" hint="Largest single one is $114,620." />
+              <Stat value="$334k" label="of quoted notional sitting in them" />
             </Reveal>
             <Reveal delay={0.16}>
-              <Stat value="255 days" label="median age of those swaps" hint="The oldest has waited 292 days." />
+              <Stat value="255 days" label="median age, the oldest waited 292" />
             </Reveal>
           </div>
 
           <Reveal delay={0.2}>
-            <p className="mt-12 max-w-2xl font-[family-name:var(--font-mono)] text-sm leading-relaxed text-mute">
-              Measured 26 Oct 2026 against the Intents Explorer. Counts only, no addresses or
-              per-user amounts. Reproduce it with{" "}
+            <p className="mt-12 font-[family-name:var(--font-mono)] text-xs leading-relaxed text-mute">
+              Measured 26 Oct 2026. Counts only, no addresses. Reproduce with{" "}
               <span className="text-tally-bright">quittance study</span>.
             </p>
           </Reveal>
@@ -195,45 +182,60 @@ export default function Home() {
 
       <section className="relative mx-auto max-w-6xl px-6 py-24">
         <Reveal>
-          <h2 className="font-[family-name:var(--font-display)] text-[clamp(1.9rem,3.6vw,2.8rem)] leading-tight tracking-[-0.015em]">
-            Why the identifier fails you
+          <h2 className="font-[family-name:var(--font-display)] text-[clamp(1.6rem,4.4vw,2.8rem)] leading-tight tracking-[-0.015em]">
+            Eight answers, never a guess.
           </h2>
-          <p className="mt-5 max-w-2xl leading-relaxed text-[#b8c7d2]">
-            Every support thread quotes a correlation id. It identifies one HTTP request, not the
-            swap. Three consecutive lookups of the same swap return three different ones, so the
-            handle people hold was never resolvable, by anyone.
+          <p className="mt-4 max-w-xl leading-relaxed text-[#b8c7d2]">
+            Each verdict carries its evidence, its next step, and the edge of what it can see.
+          </p>
+        </Reveal>
+
+        <div className="mt-11 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {LABELS.map((label, i) => (
+            <Reveal key={label.name} delay={i * 0.04}>
+              <div className="flex items-center gap-3 rounded-xl border border-[#1e3140] bg-[#0f1b24] px-4 py-3.5">
+                <label.Icon size={17} className={label.tone} />
+                <span className="font-[family-name:var(--font-mono)] text-[0.8rem] text-[#dbe5ec]">
+                  {label.name}
+                </span>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      <section className="relative mx-auto max-w-6xl px-6 pb-24">
+        <Reveal>
+          <h2 className="font-[family-name:var(--font-display)] text-[clamp(1.6rem,4.4vw,2.8rem)] leading-tight tracking-[-0.015em]">
+            The identifier you hold cannot be looked up.
+          </h2>
+          <p className="mt-4 max-w-xl leading-relaxed text-[#b8c7d2]">
+            Three reads of one swap, three different ids. It traces a request, not the money.
           </p>
         </Reveal>
         <Reveal delay={0.08}>
-          <div className="paper paper-edge mt-10 max-w-3xl rounded-lg p-6 font-[family-name:var(--font-mono)] text-[0.78rem] leading-relaxed sm:p-8 sm:text-sm">
-            <div className="text-[#5d6b76]">three reads of one swap</div>
-            <div className="mt-3 space-y-1.5">
-              <div>correlationId  7ff00f92-f61e-45b5-a7d1-9d52dbe057aa</div>
-              <div>correlationId  b9784595-5a17-4a15-a3cb-1be0c464a79f</div>
-              <div>correlationId  98b41cc8-98d0-4650-a803-4ac5ef0e7e4b</div>
+          <div className="paper paper-edge mt-9 max-w-2xl rounded-lg p-6 font-[family-name:var(--font-mono)] text-[0.76rem] leading-relaxed sm:p-7 sm:text-[0.82rem]">
+            <div className="break-token space-y-1.5">
+              <div>correlationId 7ff00f92-f61e-45b5-a7d1-9d52dbe057aa</div>
+              <div>correlationId b9784595-5a17-4a15-a3cb-1be0c464a79f</div>
+              <div>correlationId 98b41cc8-98d0-4650-a803-4ac5ef0e7e4b</div>
             </div>
-            <div className="mt-4 border-t border-t-[#ddd8cc] pt-3 text-[#14202a]">
-              same deposit, same status, same settlement. Quittance keys from a transaction hash
-              instead.
+            <div className="mt-4 border-t border-t-[#ddd8cc] pt-3 text-[#4a5b66]">
+              Same deposit. Same settlement. Quittance keys from a transaction hash instead.
             </div>
           </div>
         </Reveal>
       </section>
 
       <section className="relative border-t border-t-[#16242f]">
-        <div className="mx-auto max-w-6xl px-6 py-24">
-          <Reveal>
-            <h2 className="font-[family-name:var(--font-display)] text-[clamp(1.9rem,3.6vw,2.8rem)] leading-tight tracking-[-0.015em]">
-              What it refuses to do
-            </h2>
-          </Reveal>
-          <div className="mt-12 grid gap-8 sm:grid-cols-3">
+        <div className="mx-auto max-w-6xl px-6 py-20">
+          <div className="grid gap-8 sm:grid-cols-3">
             {REFUSALS.map((item, i) => (
               <Reveal key={item.title} delay={i * 0.06}>
                 <div className="rule-hair border-t pt-5">
-                  <item.icon size={20} className="text-tally-bright" />
+                  <item.Icon size={20} className="text-tally-bright" />
                   <h3 className="mt-4 font-medium text-[#eaf3f2]">{item.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-mute">{item.body}</p>
+                  <p className="mt-1.5 text-sm leading-relaxed text-mute">{item.body}</p>
                 </div>
               </Reveal>
             ))}
@@ -245,9 +247,7 @@ export default function Home() {
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-12 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3 text-sm text-mute">
             <TallyMark size={22} />
-            <span>
-              A quittance is a written receipt proving an obligation has been discharged.
-            </span>
+            <span>A written receipt proving an obligation has been discharged.</span>
           </div>
           <a
             href="https://github.com/AustinChris1/quittance"

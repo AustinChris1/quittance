@@ -24,6 +24,12 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
+/* Hashes and ids are long single tokens; let them wrap rather than widen the page. */
+.break-token {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 body {
   background: var(--color-ink);
   color: #e6edf2;
@@ -84,10 +90,89 @@ body {
   }
 }
 
-/* Motion sets an initial opacity of 0, so without JS the page would be blank. */
-@media (scripting: none) {
-  [data-reveal] {
-    opacity: 1 !important;
+
+/* Entrances run in CSS so they paint without waiting for JavaScript to hydrate. */
+@keyframes reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes slide-from-left {
+  from {
+    opacity: 0;
+    transform: translateX(-46px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes slide-from-right {
+  from {
+    opacity: 0;
+    transform: translateX(46px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes track-in {
+  from {
+    opacity: 0;
+    transform: scaleX(0.3);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.reveal {
+  animation: reveal-in 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.slide-left {
+  animation: slide-from-left 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.slide-right {
+  animation: slide-from-right 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.seam-in {
+  animation: fade-in 0.45s ease-out both;
+}
+
+.track-in {
+  transform-origin: left;
+  animation: track-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .slide-left,
+  .slide-right,
+  .seam-in,
+  .track-in {
+    animation: fade-in 0.01ms both;
     transform: none !important;
   }
 }

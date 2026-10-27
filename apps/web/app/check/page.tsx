@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
-import { ArrowLeft, Loader2, Search } from "lucide-react";
+import { ArrowLeft, Loader2, Search, ShieldCheck } from "lucide-react";
 import { Wordmark } from "../../components/logo";
 
 type Verdict = {
@@ -25,6 +25,14 @@ type Receipt = {
     correlationId?: string;
     statusUpdatedAt?: string;
     destinationChainTxHashes: string[];
+    delivery?: {
+      verified: boolean;
+      chain: string;
+      deliveredFormatted?: string;
+      blockNumber?: number;
+      blockTimeIso?: string;
+      reason?: string;
+    };
     creditedTo?: { account: string; token: string; amount: string };
   };
   sources: { name: string; url: string; ok: boolean; detail?: string }[];
@@ -128,7 +136,7 @@ export default function CheckPage() {
       </header>
 
       <section className="relative mx-auto max-w-4xl px-6 pt-10 pb-24">
-        <h1 className="font-[family-name:var(--font-display)] text-[clamp(2rem,5vw,3.2rem)] leading-[1.05] tracking-[-0.02em]">
+        <h1 className="font-[family-name:var(--font-display)] text-[clamp(1.75rem,6vw,3.2rem)] leading-[1.05] tracking-[-0.02em]">
           What happened to this swap?
         </h1>
         <p className="mt-5 max-w-xl leading-relaxed text-[#b8c7d2]">
@@ -205,8 +213,15 @@ export default function CheckPage() {
                   </li>
                 ))}
               </ul>
-              <p className="mt-5 text-xs text-[#5e7180]">
-                Several chains are consulted in turn, so this takes a few seconds.
+              <div className="mt-5 h-0.5 w-full overflow-hidden rounded-full bg-[#1e3140]">
+                <motion.div
+                  className="h-full w-1/3 rounded-full bg-tally-bright"
+                  animate={reduced ? {} : { x: ["-100%", "320%"] }}
+                  transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+                />
+              </div>
+              <p className="mt-3 text-xs text-[#5e7180]">
+                Several chains are consulted in turn. This takes a few seconds.
               </p>
             </motion.div>
           ) : null}
@@ -242,6 +257,31 @@ export default function CheckPage() {
               <h2 className="mt-5 max-w-2xl font-[family-name:var(--font-display)] text-2xl leading-snug tracking-[-0.01em]">
                 {result.receipt.verdict.headline}
               </h2>
+
+              {result.receipt.evidence.delivery?.verified ? (
+                <motion.div
+                  initial={reduced ? { opacity: 0 } : { opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+                  className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl border border-tally/40 bg-tally/10 px-5 py-4"
+                >
+                  <span className="flex items-center gap-2.5 text-tally-bright">
+                    <ShieldCheck size={18} />
+                    <span className="text-sm font-medium">Proven on {result.receipt.evidence.delivery.chain}</span>
+                  </span>
+                  <span className="font-[family-name:var(--font-mono)] text-sm text-[#dbe5ec]">
+                    {result.receipt.evidence.delivery.deliveredFormatted} delivered
+                  </span>
+                  {result.receipt.evidence.delivery.blockNumber ? (
+                    <span className="font-[family-name:var(--font-mono)] text-xs text-mute">
+                      block {result.receipt.evidence.delivery.blockNumber.toLocaleString("en-US")}
+                      {result.receipt.evidence.delivery.blockTimeIso
+                        ? ` · ${result.receipt.evidence.delivery.blockTimeIso.slice(0, 10)}`
+                        : ""}
+                    </span>
+                  ) : null}
+                </motion.div>
+              ) : null}
 
               <div className="paper paper-edge mt-8 rounded-lg p-6 font-[family-name:var(--font-mono)] text-[0.78rem] leading-[1.9] sm:p-8 sm:text-[0.82rem]">
                 <div className="flex items-baseline justify-between border-b border-b-[#ddd8cc] pb-3">

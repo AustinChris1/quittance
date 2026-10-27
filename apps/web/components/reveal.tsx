@@ -1,31 +1,27 @@
-"use client";
-
-import { motion, useReducedMotion } from "motion/react";
 import type { ReactNode } from "react";
 
-/** Entrances only, ease-out, under 300ms of perceived motion, transform and opacity only. */
+/**
+ * Entrance animation, in CSS rather than JavaScript.
+ *
+ * Two earlier attempts hid content: a scroll-triggered reveal left sections invisible when the
+ * observer fired late, and a mount-triggered one left the whole page blank until hydration. A CSS
+ * animation paints on the first frame and needs no JavaScript at all.
+ */
 export function Reveal({
   children,
   delay = 0,
-  y = 14,
   className = "",
 }: {
   children: ReactNode;
   delay?: number;
-  y?: number;
   className?: string;
 }) {
-  const reduced = useReducedMotion();
   return (
-    <motion.div
-      className={className}
-      data-reveal=""
-      initial={reduced ? { opacity: 0 } : { opacity: 0, y }}
-      whileInView={reduced ? { opacity: 1 } : { opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-12% 0px -8% 0px" }}
-      transition={{ duration: 0.42, delay, ease: [0.16, 1, 0.3, 1] }}
+    <div
+      className={`reveal ${className}`}
+      style={delay ? { animationDelay: `${delay}s` } : undefined}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }
