@@ -3,6 +3,7 @@ import { readOneClickStatus } from "./sources/oneclick.ts";
 import { readNearTx } from "./sources/nearblocks.ts";
 import { ftBalanceOf, readBtcConnectorConfig } from "./sources/near.ts";
 import { searchExplorer, statusFromExplorer, type ExplorerRecord } from "./sources/explorer.ts";
+import { parseEvmAsset, verifyEvmDelivery } from "./sources/evm.ts";
 
 export type GatherOptions = {
   depositAddress?: string;
@@ -130,6 +131,28 @@ export async function gatherEvidence(options: GatherOptions): Promise<Evidence> 
       sources.push(balance.source);
       if (balance.balance !== undefined) {
         chain.recipientBalance = { account: recipient, token, amount: balance.balance };
+      }
+    }
+  }
+
+  // A reported SUCCESS is not evidence. Read the destination receipt and check it ourselves.
+  if (status.available && status.destinationChainTxHashes.length > 0) {
+    const asset = parseEvmAsset(status.destinationAsset);
+    const txHash = status.destinationChainTxHashes[0]!.hash;
+    if (asset && /^0x[0-9a-fA-F]{64}$/.test(txHash)) {
+      const { proof, sources: proofSources } = await verifyEvmDelivery({
+        txHash,
+        asset,
+        recipient: status.recipient,
+      });
+      sources.push(...proofSources);
+      chain.delivery = proof;
+      if (proof.verified && proof.deliveredFormatted) {
+        notes.push(
+          `Delivery confirmed on ${proof.chain}: ${proof.deliveredFormatted} reached the quoted recipient in block ${proof.blockNumber ?? "unknown"}${proof.blockTimeIso ? " at " + proof.blockTimeIso : ""}.`,
+        );
+      } else if (proof.reason) {
+        notes.push(`Delivery could not be confirmed on ${proof.chain}: ${proof.reason}`);
       }
     }
   }

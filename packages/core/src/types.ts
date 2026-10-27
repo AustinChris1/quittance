@@ -71,11 +71,27 @@ export type ObservedDeposit = {
   spent?: boolean;
 };
 
+/** Independent confirmation that the destination transaction did what the status claims. */
+export type DeliveryProof = {
+  verified: boolean;
+  chain: string;
+  tx: string;
+  receiptStatus?: "success" | "failed";
+  blockNumber?: number;
+  blockTimeIso?: string;
+  deliveredRaw?: string;
+  deliveredFormatted?: string;
+  recipientMatched?: boolean;
+  reason?: string;
+};
+
 export type ChainEvidence = {
   deposits: ObservedDeposit[];
   creditedTo?: { account: string; token: string; amount: string };
   recipientBalance?: { account: string; token: string; amount: string };
   refundTx?: TxRef;
+  /** Read from the destination chain, not taken from the operator record. */
+  delivery?: DeliveryProof;
   /** Set when a deposit landed as a different asset or chain than the quote expected. */
   assetMismatch?: { expected: string; observed: string; chain: string };
   /** Funds still sitting untouched at the deposit address. */

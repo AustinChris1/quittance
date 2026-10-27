@@ -219,10 +219,27 @@ const RULES: Rule[] = [
         const tx = e.status.destinationChainTxHashes[0]!;
         basis.push(`A destination transaction is published: ${tx.hash} on ${tx.chain}.`);
       }
+      const limits = [ALWAYS_LIMIT];
+      const proof = e.chain.delivery;
+      if (proof?.verified) {
+        const where = proof.blockNumber ? ` in block ${proof.blockNumber}` : "";
+        const when = proof.blockTimeIso ? ` at ${proof.blockTimeIso}` : "";
+        basis.push(
+          `Read independently from ${proof.chain}: ${proof.deliveredFormatted ?? "the expected token"} reached the quoted recipient${where}${when}, receipt status ${proof.receiptStatus ?? "unknown"}.`,
+        );
+      } else if (proof?.reason) {
+        basis.push(
+          `The destination receipt was read on ${proof.chain} and did not confirm delivery: ${proof.reason}`,
+        );
+        limits.push("A reported SUCCESS the destination chain does not confirm needs an internal trace.");
+      } else {
+        limits.push("The destination receipt was not read, so delivery rests on the operator record alone.");
+      }
+      limits.push("The amount received was not reconciled against the quoted amount.");
       return {
         label: "DELIVERED",
         basis,
-        limits: [ALWAYS_LIMIT, "The amount received was not reconciled against the quoted amount."],
+        limits,
         next: "Nothing to do. Keep this receipt if you need to evidence the settlement later.",
       };
     },

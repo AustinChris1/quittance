@@ -25,5 +25,11 @@ export {
   DEFAULT_EXPLORER_BASE,
   type ExplorerRecord,
 } from "./sources/explorer.ts";
+export {
+  verifyEvmDelivery,
+  parseEvmAsset,
+  EVM_RPCS,
+  type DeliveryProof as EvmDeliveryProof,
+} from "./sources/evm.ts";
 export { postReceipt, type WebhookResult } from "./webhook.ts";
 export { runStudy, renderStudy, type Study, type Cohort } from "./study.ts";

@@ -25,6 +25,7 @@ export type Receipt = {
     creditedTo?: { account: string; token: string; amount: string };
     recipientBalance?: { account: string; token: string; amount: string };
     refundTx?: string;
+    delivery?: Evidence["chain"]["delivery"];
     connector?: Evidence["connector"];
     notes: string[];
   };
@@ -74,6 +75,7 @@ export function buildReceipt(evidence: Evidence, generatedAt = new Date().toISOS
       creditedTo: evidence.chain.creditedTo,
       recipientBalance: evidence.chain.recipientBalance,
       refundTx: evidence.chain.refundTx?.hash,
+      delivery: evidence.chain.delivery,
       connector: evidence.connector,
       notes: evidence.notes,
     },
