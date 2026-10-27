@@ -85,8 +85,33 @@ export type DeliveryProof = {
   reason?: string;
 };
 
+/**
+ * The documented Confidential Intents treasury (PRIVATE_TREASURY_ACCOUNT_ID). A transfer here is
+ * the public shield step: the bridge mints matching tokens on the private FAR chain, where
+ * balances are not visible from any public record.
+ */
+export const CONFIDENTIAL_TREASURY =
+  "51e8f94d77b5e90dc9852ca6113771e11e8382ce69473a75e313e41665de7cbe";
+
+/** A transfer decoded from a signed intent inside an execute_intents call. */
+export type IntentTransfer = {
+  signer?: string;
+  receiver: string;
+  token: string;
+  amountRaw: string;
+  amountFormatted?: string;
+  deadline?: string;
+};
+
 export type ChainEvidence = {
   deposits: ObservedDeposit[];
+  /**
+   * Transfers moved inside the Intents contract's own ledger. These never surface as ordinary
+   * token events, so they have to be read out of the signed intent payloads.
+   */
+  intentTransfers?: IntentTransfer[];
+  /** When the NEAR transaction landed. */
+  nearTxTimeIso?: string;
   creditedTo?: { account: string; token: string; amount: string };
   recipientBalance?: { account: string; token: string; amount: string };
   refundTx?: TxRef;

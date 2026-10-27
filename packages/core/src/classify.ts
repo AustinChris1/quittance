@@ -1,5 +1,6 @@
 import type { Evidence } from "./types.ts";
-import { LABEL_HEADLINE, type Verdict } from "./labels.ts";
+import { CONFIDENTIAL_TREASURY } from "./types.ts";
+import { LABEL_HEADLINE, type Verdict, type Label } from "./labels.ts";
 
 const ALWAYS_LIMIT =
   "Public data only. Solver internal state and private shard balances are not visible.";
@@ -28,7 +29,7 @@ function baseLimits(e: Evidence): string[] {
 type Rule = {
   id: string;
   applies: (e: Evidence) => boolean;
-  build: (e: Evidence) => Omit<Verdict, "rule" | "headline">;
+  build: (e: Evidence) => Omit<Verdict, "rule" | "headline" | "summary">;
 };
 
 // Ordered. First match wins, so narrow cases are declared before broad ones.
@@ -210,6 +211,44 @@ const RULES: Rule[] = [
     },
   },
   {
+    // Confidential routes leave no record in the status endpoint or the Explorer, so the only
+    // public evidence is the signed intent itself. Never fires over a proven delivery or refund.
+    id: "shielded/transfer-to-confidential-treasury",
+    applies: (e) => {
+      const shielded = (e.chain.intentTransfers ?? []).some((t) => t.receiver === CONFIDENTIAL_TREASURY);
+      if (!shielded) return false;
+      if (e.chain.delivery?.verified) return false;
+      if (e.status.available && e.status.status === "REFUNDED") return false;
+      return true;
+    },
+    build: (e) => {
+      const transfers = (e.chain.intentTransfers ?? []).filter((t) => t.receiver === CONFIDENTIAL_TREASURY);
+      const basis = transfers.map(
+        (t) =>
+          `A signed intent transferred ${t.amountFormatted ?? t.amountRaw} ${t.token} to the documented Confidential Intents treasury${t.signer ? `, signed by ${t.signer}` : ""}.`,
+      );
+      basis.push(
+        "That transfer is the public shield step: the bridge mints matching tokens on the private FAR chain.",
+      );
+      if (e.chain.nearTxTimeIso) basis.push(`The shield landed on NEAR at ${e.chain.nearTxTimeIso}.`);
+      if (!e.status.available) {
+        basis.push(
+          "Neither the status endpoint nor the Explorer indexes this swap, which is expected for a confidential route.",
+        );
+      }
+      return {
+        label: "SHIELDED_UNPROVEN",
+        basis,
+        limits: [
+          ALWAYS_LIMIT,
+          "What happens after the shield lives on the private FAR chain, which no public record can see.",
+          "This proves the money was shielded. It does not prove it was delivered, and it does not prove it was lost.",
+        ],
+        next: "If you meant to send to a public destination, this may be a misroute: ask the operator for an internal trace, quoting this NEAR transaction. If you chose a confidential route, keep this receipt as evidence of the shield.",
+      };
+    },
+  },
+  {
     id: "delivered/destination-transaction-observed",
     applies: (e) =>
       e.status.available && e.status.status === "SUCCESS" && e.status.destinationChainTxHashes.length > 0,
@@ -268,6 +307,50 @@ export type Classification = {
   rulesEvaluated: string[];
 };
 
+function titleCase(chain: string): string {
+  return chain.charAt(0).toUpperCase() + chain.slice(1);
+}
+
+/** Whole days between two ISO timestamps, or null if either is missing. */
+function daysBetween(from?: string, to?: string): number | null {
+  if (!from || !to) return null;
+  const ms = new Date(to).getTime() - new Date(from).getTime();
+  return Number.isFinite(ms) && ms >= 0 ? Math.round(ms / 86_400_000) : null;
+}
+
+/**
+ * One plain sentence a non-specialist can read. Built only from observed evidence, so it can never
+ * say more than the verdict's basis supports.
+ */
+function summarize(label: Label, e: Evidence): string {
+  const proof = e.chain.delivery;
+  switch (label) {
+    case "DELIVERED": {
+      if (proof?.verified) {
+        const started = e.chain.deposits[0]?.blockTimestampIso ?? e.chain.nearTxTimeIso;
+        const days = daysBetween(started, proof.blockTimeIso);
+        const when = days === null ? "" : days === 0 ? " the same day" : ` ${days} day${days === 1 ? "" : "s"} after the deposit`;
+        return `Delivered on ${titleCase(proof.chain)}${when}, and proven on that chain rather than taken on trust.`;
+      }
+      return "The operator reports this delivered, with a published destination transaction.";
+    }
+    case "REFUNDED_OK":
+      return "The swap did not go through, and the money went back to the refund address.";
+    case "STRANDED":
+      return "The deposit arrived and the swap failed, but nothing has been refunded.";
+    case "WRONG_DOOR":
+      return "This was sent to the wrong chain or asset for its quote, so the refund is manual.";
+    case "LOCKED_OUT":
+      return "A refund exists on paper, but this deposit set no refund address and is behind a very long timer.";
+    case "SHIELDED_UNPROVEN":
+      return "The money was moved onto NEAR's private route. Public records cannot prove whether it arrived, or that it was lost.";
+    case "IN_FLIGHT":
+      return "Still in progress. Nothing has failed yet.";
+    default:
+      return "There is not enough public evidence to say what happened.";
+  }
+}
+
 export function classify(evidence: Evidence): Classification {
   const evaluated: string[] = [];
   for (const rule of RULES) {
@@ -275,7 +358,12 @@ export function classify(evidence: Evidence): Classification {
     if (!rule.applies(evidence)) continue;
     const partial = rule.build(evidence);
     return {
-      verdict: { ...partial, rule: rule.id, headline: LABEL_HEADLINE[partial.label] },
+      verdict: {
+        ...partial,
+        rule: rule.id,
+        headline: LABEL_HEADLINE[partial.label],
+        summary: summarize(partial.label, evidence),
+      },
       rulesEvaluated: evaluated,
     };
   }
@@ -283,13 +371,17 @@ export function classify(evidence: Evidence): Classification {
     verdict: {
       label: "UNDETERMINED",
       headline: LABEL_HEADLINE.UNDETERMINED,
+      summary: summarize("UNDETERMINED", evidence),
       rule: "fallback/no-rule-applied",
       basis: evidence.notes.length > 0 ? [...evidence.notes] : ["No rule matched the evidence gathered."],
       limits: [
         ...baseLimits(evidence),
         "An unclassified deposit is a gap in these rules, not proof that the swap is healthy.",
       ],
-      next: "Confirm the deposit address is the one the quote issued, and supply the NEAR transaction hash if you have it. If the evidence still does not match a known pattern, file it as a new case.",
+      next:
+        !evidence.status.available && !evidence.chain.checked
+          ? "Neither the status endpoint nor the Explorer has a record of this. Confidential routes are not publicly indexed, so paste the NEAR transaction hash from your wallet instead; Quittance can read the shield from it."
+          : "Confirm the deposit address is the one the quote issued, and supply the NEAR transaction hash if you have it. If the evidence still does not match a known pattern, file it as a new case.",
     },
     rulesEvaluated: evaluated,
   };

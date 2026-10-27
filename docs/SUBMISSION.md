@@ -26,7 +26,17 @@ Record the browser at `https://quittance-five.vercel.app`. No terminal, no slide
 | 0:38 | The reading panel, sources naming themselves. | Four chains consulted in turn. |
 | 0:48 | The verdict lands: DELIVERED, the proof badge. | Proven on Ethereum, 190,995.29, block 26,068,435. |
 | 0:56 | Scroll the receipt: basis, next, limits, fingerprint. | Every verdict carries its evidence and its limits. |
-| 1:06 | Stop. | |
+| 1:06 | Click **Try a confidential swap**. | The second case. |
+| 1:18 | SHIELDED_UNPROVEN lands. | Shielded to the private treasury. No public record can prove it arrived or was lost, and the tool says so. |
+| 1:28 | Stop. | |
+
+The pair is the argument. The first case shows public records overturning a status word and a
+public complaint. The second shows the tool refusing to claim a loss it cannot see. Judges will
+trust the first more because of the second.
+
+Use `TBy2io3Q3Jt4UM4ejDhkkUQJZgZuXw2sus` if you ever need the $193K swap's deposit address. Do not
+use `0xDF7A93d400159d0f8f40AAe42576d01285EA9e39`: that is a deliberately unknown address for
+demonstrating the anonymous 404, and it returns nothing.
 
 The one frame that matters is 0:48. A forum thread still says that money is gone. The screen says
 it arrived on 27 September, and proves it against an Ethereum node.

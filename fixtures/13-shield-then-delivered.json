@@ -1,0 +1,71 @@
+{
+  "case": {
+    "id": "13-shield-then-delivered",
+    "expectedLabel": "DELIVERED",
+    "title": "A shield that was then delivered and proven must not read as shielded",
+    "frozenAt": "2026-10-27",
+    "provenance": {
+      "status": "Synthetic regression guard. The treasury rule must never override a proven delivery."
+    }
+  },
+  "evidence": {
+    "input": {
+      "nearTxHash": "3djtQ3pUHv8SGtNKS3CMGice7E7S9oeS4DJzNYyjCUVD"
+    },
+    "fetchedAt": "2026-10-27T00:00:00.000Z",
+    "mode": "authenticated",
+    "status": {
+      "available": true,
+      "status": "SUCCESS",
+      "correlationId": "00000000-0000-4000-8000-000000000013",
+      "updatedAt": "2026-10-27T00:00:00.000Z",
+      "recipientType": "DESTINATION_CHAIN",
+      "refundedAmount": "0",
+      "refundAmountKnown": true,
+      "refundReason": null,
+      "originChainTxHashes": [],
+      "destinationChainTxHashes": [
+        {
+          "chain": "destination",
+          "hash": "0xabababababababababababababababababababababababababababababababab"
+        }
+      ],
+      "nearTxHashes": [],
+      "intentHashes": []
+    },
+    "chain": {
+      "checked": true,
+      "deposits": [],
+      "intentTransfers": [
+        {
+          "signer": "78a41c32",
+          "receiver": "51e8f94d77b5e90dc9852ca6113771e11e8382ce69473a75e313e41665de7cbe",
+          "token": "ETH (Robinhood Chain)",
+          "amountRaw": "38000000000000000",
+          "amountFormatted": "0.038"
+        }
+      ],
+      "nearTxTimeIso": "2026-09-23T19:47:59.831Z",
+      "delivery": {
+        "verified": true,
+        "chain": "ethereum",
+        "tx": "0xabababababababababababababababababababababababababababababababab",
+        "receiptStatus": "success",
+        "blockNumber": 26000000,
+        "deliveredFormatted": "0.038",
+        "recipientMatched": true
+      }
+    },
+    "sources": [
+      {
+        "name": "nearblocks.txn",
+        "url": "https://api.nearblocks.io/v1/txns/3djtQ3pUHv8SGtNKS3CMGice7E7S9oeS4DJzNYyjCUVD",
+        "readAt": "2026-10-27T00:00:00.000Z",
+        "ok": true
+      }
+    ],
+    "notes": [
+      "Neither the status endpoint nor the Explorer indexes this swap, which is expected for a confidential route."
+    ]
+  }
+}

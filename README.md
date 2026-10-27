@@ -66,7 +66,7 @@ Requires Node 24 or newer (`node --version`).
 node apps/cli/src/main.ts verify
 ```
 
-Expect `labels correct 10 of 10` and a median classify time under a millisecond.
+Expect `labels correct 13 of 13` and a median classify time under a millisecond.
 
 **Step 2 - print the receipt for the case above.**
 
@@ -85,9 +85,11 @@ node apps/cli/src/main.ts check --deposit 0xDF7A93d400159d0f8f40AAe42576d01285EA
 ```
 
 The first proves the chain facts and returns `UNDETERMINED`, because a NEAR transaction alone does
-not tell you what the operator thinks happened. The second calls the status endpoint with no
-credentials at all; its receipt cites `HTTP 404 unauthenticated, limit 1200`, which is the server
-confirming it processed an anonymous lookup.
+not tell you what the operator thinks happened. The second uses an address the operator has never
+seen, on purpose: it calls the status endpoint with no credentials at all, and the receipt cites
+`HTTP 404 unauthenticated, limit 1200`, which is the server confirming it processed an anonymous
+lookup. It is **not** the address of the $193K swap. That one is
+`TBy2io3Q3Jt4UM4ejDhkkUQJZgZuXw2sus`, a TRON address, which step 3b resolves to.
 
 **Step 3b - resolve the whole thing, if you have a partner JWT in `.env`.**
 
@@ -97,7 +99,22 @@ node apps/cli/src/main.ts check --search 8a33DkKfZMWRKbK2pXuQAWVLXSy4AyZF6PfcENv
 
 This is the full chain: a transaction hash resolves through the Explorer to its deposit address,
 the status fields come back, and the verdict turns from `UNDETERMINED` into `DELIVERED`. It is the
-one thing a partner token genuinely unlocks.
+one thing a partner token genuinely unlocks. The receipt opens with one plain sentence: *Delivered
+on Ethereum 16 days after the deposit, and proven on that chain rather than taken on trust.*
+
+**Step 3c - a confidential swap, which no public index can see.**
+
+```
+node apps/cli/src/main.ts check --search 3djtQ3pUHv8SGtNKS3CMGice7E7S9oeS4DJzNYyjCUVD
+```
+
+Expect `SHIELDED_UNPROVEN`. This is one of the two swaps reported in
+[near/intents#384](https://github.com/near/intents/issues/384) as a misroute. Neither the status
+endpoint nor the Explorer has any record of it. The only public trace is a successful
+`execute_intents` call that emits no ordinary token events at all, so Quittance decodes the signed
+NEP-413 intent inside it: 0.038 ETH on Robinhood Chain, transferred to the documented Confidential
+Intents treasury. That is the shield step. The receipt says so, and says just as plainly that
+public records can prove neither delivery nor loss from there.
 
 **Step 4 - close the loop into an endpoint you control.**
 

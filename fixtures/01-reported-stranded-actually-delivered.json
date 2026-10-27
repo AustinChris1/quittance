@@ -86,7 +86,19 @@
         "account": "intents.near",
         "token": "TRX",
         "amount": "575830.000000"
-      }
+      },
+      "delivery": {
+        "verified": true,
+        "chain": "ethereum",
+        "tx": "0x9be9c2f8ed78d32ecf222bca3595d50cc42aed979030e4ebf0f84a626e13421a",
+        "receiptStatus": "success",
+        "blockNumber": 26068435,
+        "blockTimeIso": "2026-09-27T11:16:35.000Z",
+        "deliveredRaw": "190995293894",
+        "deliveredFormatted": "190995.293894",
+        "recipientMatched": true
+      },
+      "nearTxTimeIso": "2026-09-11T16:27:04.048Z"
     },
     "sources": [
       {

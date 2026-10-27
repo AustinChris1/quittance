@@ -10,6 +10,7 @@ import {
   Copy,
   DoorOpen,
   EyeOff,
+  FileText,
   Loader2,
   Lock,
   PackageX,
@@ -26,6 +27,7 @@ import { ChainLogo, type ChainName } from "../../components/chains";
 type Verdict = {
   label: string;
   headline: string;
+  summary: string;
   rule: string;
   basis: string[];
   limits: string[];
@@ -74,6 +76,7 @@ const TONE: Record<string, Tone> = {
 };
 
 const SAMPLE = "8a33DkKfZMWRKbK2pXuQAWVLXSy4AyZF6PfcENvCJgCb";
+const SHIELD_SAMPLE = "3djtQ3pUHv8SGtNKS3CMGice7E7S9oeS4DJzNYyjCUVD";
 
 const READS: { label: string; chain: ChainName }[] = [
   { label: "Resolving the hash through the Intents Explorer", chain: "NEAR" },
@@ -108,7 +111,7 @@ export default function CheckPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{ receipt: Receipt; inputKind: string } | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<"link" | "markdown" | null>(null);
   const reduced = useReducedMotion();
   const ran = useRef(false);
 
@@ -153,14 +156,44 @@ export default function CheckPage() {
     }
   }
 
-  async function copyLink() {
+  async function copyText(text: string, which: "link" | "markdown") {
     try {
-      await navigator.clipboard.writeText(window.location.href);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1600);
+      await navigator.clipboard.writeText(text);
+      setCopied(which);
+      setTimeout(() => setCopied(null), 1600);
     } catch {
       // clipboard denied; nothing to recover
     }
+  }
+
+  /** A receipt that pastes cleanly into a support ticket, issue or chat. */
+  function asMarkdown(r: Receipt): string {
+    const v = r.verdict;
+    const d = r.evidence.delivery;
+    const lines = [
+      `### Quittance receipt: ${v.label.replace(/_/g, " ")}`,
+      "",
+      `**${v.summary}**`,
+      "",
+      r.input.depositAddress ? `- Deposit address: \`${r.input.depositAddress}\`` : null,
+      r.input.nearTxHash ? `- NEAR transaction: \`${r.input.nearTxHash}\`` : null,
+      `- Status: ${r.evidence.status ?? "not read"}`,
+      d?.verified
+        ? `- Proven on ${d.chain}: ${d.deliveredFormatted} delivered, block ${d.blockNumber}`
+        : null,
+      "",
+      "**What was observed**",
+      ...v.basis.map((b) => `- ${b}`),
+      "",
+      "**What it cannot see**",
+      ...v.limits.map((l) => `- ${l}`),
+      "",
+      `**Next:** ${v.next}`,
+      "",
+      `Rule \`${v.rule}\` · fingerprint \`${r.fingerprint}\``,
+      `Link: ${window.location.href}`,
+    ];
+    return lines.filter((l) => l !== null).join("\n");
   }
 
   const tone = result ? (TONE[result.receipt.verdict.label] ?? TONE.UNDETERMINED!) : null;
@@ -224,17 +257,30 @@ export default function CheckPage() {
           </div>
         </form>
 
-        <button
-          type="button"
-          onClick={() => {
-            setQuery(SAMPLE);
-            void submit(SAMPLE);
-          }}
-          className="mt-4 inline-flex items-center gap-2 rounded-full bg-mint-wash px-4 py-2 text-sm font-medium text-mint-ink transition-transform hover:-translate-y-0.5"
-        >
-          <span className="size-1.5 rounded-full bg-mint" />
-          Try the $193K case
-        </button>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setQuery(SAMPLE);
+              void submit(SAMPLE);
+            }}
+            className="inline-flex items-center gap-2 rounded-full bg-mint-wash px-4 py-2 text-sm font-medium text-mint-ink transition-transform hover:-translate-y-0.5"
+          >
+            <span className="size-1.5 rounded-full bg-mint" />
+            Try the $193K case
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setQuery(SHIELD_SAMPLE);
+              void submit(SHIELD_SAMPLE);
+            }}
+            className="inline-flex items-center gap-2 rounded-full bg-[color-mix(in_oklab,var(--violet)_20%,transparent)] px-4 py-2 text-sm font-medium transition-transform hover:-translate-y-0.5"
+          >
+            <EyeOff size={14} />
+            Try a confidential swap
+          </button>
+        </div>
 
         <AnimatePresence mode="wait">
           {busy ? (
@@ -297,18 +343,29 @@ export default function CheckPage() {
                   {result.receipt.verdict.label.replace(/_/g, " ")}
                 </span>
                 <span className="text-sm text-faint">read as {result.inputKind}</span>
-                <button
-                  type="button"
-                  onClick={copyLink}
-                  className="ml-auto inline-flex items-center gap-2 rounded-full border border-line px-4 py-2 text-sm transition-colors hover:border-fg"
-                >
-                  <Copy size={14} />
-                  {copied ? "Copied" : "Copy link"}
-                </button>
+                <span className="ml-auto flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void copyText(asMarkdown(result.receipt), "markdown")}
+                    className="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2 text-sm transition-colors hover:border-fg"
+                  >
+                    <FileText size={14} />
+                    {copied === "markdown" ? "Copied" : "Copy for a ticket"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void copyText(window.location.href, "link")}
+                    className="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2 text-sm transition-colors hover:border-fg"
+                  >
+                    <Copy size={14} />
+                    {copied === "link" ? "Copied" : "Copy link"}
+                  </button>
+                </span>
               </div>
 
+              {/* The plain sentence leads; the formal label sits above it as the chip. */}
               <h2 className="display mt-6 max-w-3xl text-[clamp(1.7rem,3.6vw,2.6rem)]">
-                {result.receipt.verdict.headline}
+                {result.receipt.verdict.summary}
               </h2>
 
               {delivery?.verified ? (

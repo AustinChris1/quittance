@@ -28,6 +28,8 @@ export const LABEL_HEADLINE: Record<Label, string> = {
 export type Verdict = {
   label: Label;
   headline: string;
+  /** One plain sentence built from the evidence, never from a model. Nothing in it is inferred. */
+  summary: string;
   rule: string;
   /** Facts that were actually observed, each one checkable. */
   basis: string[];

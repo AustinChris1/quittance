@@ -1,0 +1,54 @@
+{
+  "case": {
+    "id": "12-shielded-confidential-0001",
+    "expectedLabel": "SHIELDED_UNPROVEN",
+    "title": "0.001 ETH shielded to the Confidential Intents treasury, not indexed anywhere public",
+    "frozenAt": "2026-10-27",
+    "provenance": {
+      "status": "Read from mainnet on 2026-10-27. The NEAR transaction is a successful execute_intents call whose signed NEP-413 intent transfers to the documented Confidential Intents treasury. It emits no ordinary token events, so the transfer was decoded from the signed payload. Both the 1Click status endpoint and the Explorer return no record of the deposit address or the transaction.",
+      "issue": "Reported in near/intents issue #384 as a misroute with SUCCESS and no refund.",
+      "deposit": "0x5804D198d6834787722e5408FE1e2F9DE6F19941 on Robinhood Chain",
+      "links": [
+        "https://github.com/near/intents/issues/384",
+        "https://nearblocks.io/txns/jNeJZQ4pa4p69LBiEvTDbTj2WmhCgiKRY2a2scA193j",
+        "https://docs.near-intents.org/integration/market-makers/confidential-intents"
+      ]
+    }
+  },
+  "evidence": {
+    "input": {
+      "nearTxHash": "jNeJZQ4pa4p69LBiEvTDbTj2WmhCgiKRY2a2scA193j"
+    },
+    "fetchedAt": "2026-10-27T00:00:00.000Z",
+    "mode": "authenticated",
+    "status": {
+      "available": false,
+      "reason": "The operator has no record of this deposit address. Either the quote was never created, or the address belongs to a different route."
+    },
+    "chain": {
+      "checked": true,
+      "deposits": [],
+      "intentTransfers": [
+        {
+          "signer": "8a30b9cfbf06",
+          "receiver": "51e8f94d77b5e90dc9852ca6113771e11e8382ce69473a75e313e41665de7cbe",
+          "token": "ETH (Robinhood Chain)",
+          "amountRaw": "1000000000000000",
+          "amountFormatted": "0.001"
+        }
+      ],
+      "nearTxTimeIso": "2026-09-23T19:52:38.325Z"
+    },
+    "sources": [
+      {
+        "name": "nearblocks.txn",
+        "url": "https://api.nearblocks.io/v1/txns/jNeJZQ4pa4p69LBiEvTDbTj2WmhCgiKRY2a2scA193j",
+        "readAt": "2026-10-27T00:00:00.000Z",
+        "ok": true
+      }
+    ],
+    "notes": [
+      "Neither the status endpoint nor the Explorer indexes this swap, which is expected for a confidential route."
+    ]
+  }
+}

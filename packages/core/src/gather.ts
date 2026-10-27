@@ -111,8 +111,16 @@ export async function gatherEvidence(options: GatherOptions): Promise<Evidence> 
     chain.checked = true;
     chain.deposits = tx.deposits;
     chain.creditedTo = tx.creditedTo;
-    if (tx.deposits.length === 0) {
+    chain.intentTransfers = tx.intentTransfers;
+    chain.nearTxTimeIso = tx.blockTimestampIso;
+    if (tx.deposits.length === 0 && tx.intentTransfers.length === 0) {
       notes.push(`No token movement was decoded from NEAR transaction ${nearTxHash}.`);
+    } else if (tx.intentTransfers.length > 0) {
+      for (const t of tx.intentTransfers) {
+        notes.push(
+          `Signed intent in ${nearTxHash}: ${t.amountFormatted ?? t.amountRaw} ${t.token} transferred to ${t.receiver}.`,
+        );
+      }
     } else if (tx.creditedTo) {
       const when = tx.blockTimestampIso ? ` at ${tx.blockTimestampIso}` : "";
       notes.push(
