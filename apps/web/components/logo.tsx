@@ -12,7 +12,7 @@ export function TallyMark({
   className?: string;
   mono?: boolean;
 }) {
-  const accent = mono ? "currentColor" : "var(--color-tally-bright)";
+  const accent = mono ? "currentColor" : "var(--mint-ink)";
   return (
     <svg
       width={size}
@@ -48,10 +48,7 @@ export function Wordmark({ className = "" }: { className?: string }) {
   return (
     <span className={`inline-flex items-center gap-2.5 ${className}`}>
       <TallyMark size={26} />
-      <span
-        className="font-[family-name:var(--font-display)] text-[1.35rem] leading-none tracking-[-0.015em]"
-        style={{ fontVariationSettings: '"SOFT" 0, "WONK" 1, "opsz" 32' }}
-      >
+      <span className="text-[1.3rem] leading-none font-semibold tracking-[-0.02em]" style={{ fontVariationSettings: '"wdth" 108' }}>
         Quittance
       </span>
     </span>

@@ -1,22 +1,67 @@
 @import "tailwindcss";
 
-@theme {
-  --color-ink: #0b141c;
-  --color-ink-raised: #111f2a;
-  --color-ink-line: #1e3140;
-  --color-paper: #f6f4ee;
-  --color-paper-line: #ddd8cc;
-  --color-tally: #15807a;
-  --color-tally-bright: #5fc7bf;
-  --color-caution: #c27318;
-  --color-mute: #8fa3b0;
+/* next-themes sets the class on <html>; this makes `dark:` follow it. */
+@custom-variant dark (&:where(.dark, .dark *));
 
-  --font-display: "Fraunces", ui-serif, Georgia, serif;
-  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
+/*
+ * NEAR's own tokens, read from near.org on 2026-10-27: mint #00ec97, pure black and white,
+ * warm off-white #f2f1e9, with cyan, purple and coral as accents. Mona Sans is their face.
+ */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-paper: var(--paper);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-line: var(--line);
+  --color-mint: var(--mint);
+  --color-mint-ink: var(--mint-ink);
+  --color-mint-wash: var(--mint-wash);
+  --color-cyan: var(--cyan);
+  --color-violet: var(--violet);
+  --color-coral: var(--coral);
+  --color-coral-ink: var(--coral-ink);
+
+  --font-sans: var(--font-mona), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-mona), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", monospace;
 }
 
 :root {
+  --bg: #f9f9fa;
+  --surface: #ffffff;
+  --paper: #f2f1e9;
+  --fg: #000000;
+  --muted: #5c5c5c;
+  --faint: #8c8b86;
+  --line: #e5e5e5;
+  --mint: #00ec97;
+  /* Mint fails contrast as text on white, so text uses a deeper ink of the same hue. */
+  --mint-ink: #007a4d;
+  --mint-wash: #d6fbea;
+  --cyan: #17d9d4;
+  --violet: #9797ff;
+  --coral: #ff7966;
+  --coral-ink: #c4351f;
+  color-scheme: light;
+}
+
+.dark {
+  --bg: #000000;
+  --surface: #0c0c0c;
+  --paper: #121212;
+  --fg: #ffffff;
+  --muted: #acaba6;
+  --faint: #757575;
+  --line: #262626;
+  --mint: #00ec97;
+  --mint-ink: #00ec97;
+  --mint-wash: #00281a;
+  --cyan: #17d9d4;
+  --violet: #9797ff;
+  --coral: #ff7966;
+  --coral-ink: #ff7966;
   color-scheme: dark;
 }
 
@@ -24,59 +69,103 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
-/* Hashes and ids are long single tokens; let them wrap rather than widen the page. */
-.break-token {
-  overflow-wrap: anywhere;
-  word-break: break-word;
-}
-
 body {
-  background: var(--color-ink);
-  color: #e6edf2;
+  background: var(--bg);
+  color: var(--fg);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 ::selection {
-  background: var(--color-tally);
-  color: #fff;
+  background: var(--mint);
+  color: #000;
 }
 
-/* The grain that makes the dark field read as a ledger rather than a void. */
-.field-grain {
-  background-image:
-    repeating-linear-gradient(
-      to bottom,
-      color-mix(in oklab, var(--color-ink-line) 55%, transparent) 0 1px,
-      transparent 1px 34px
-    );
+/* Mona Sans has a width axis. Display type runs wide and heavy, the way NEAR sets it. */
+.display {
+  font-family: var(--font-display);
+  font-variation-settings: "wdth" 112;
+  font-weight: 760;
+  letter-spacing: -0.035em;
+  line-height: 0.95;
 }
 
-.rule-hair {
-  border-color: color-mix(in oklab, var(--color-ink-line) 90%, transparent);
+.figure {
+  font-variant-numeric: tabular-nums lining-nums;
+  font-variation-settings: "wdth" 118;
+  font-weight: 800;
+  letter-spacing: -0.04em;
 }
 
-/* Receipt paper, deliberately the inverse of the page. */
-.paper {
-  background: var(--color-paper);
-  color: #14202a;
-  background-image:
-    repeating-linear-gradient(
-      to bottom,
-      color-mix(in oklab, var(--color-paper-line) 60%, transparent) 0 1px,
-      transparent 1px 28px
-    );
-}
-
-.paper-edge {
-  --notch: 7px;
+/* The receipt: the one surface that should feel like paper you could tear out and keep. */
+.note-edge {
+  --notch: 9px;
   -webkit-mask-image: radial-gradient(var(--notch) at 0 50%, transparent 98%, #000 100%),
     radial-gradient(var(--notch) at 100% 50%, transparent 98%, #000 100%);
   -webkit-mask-composite: source-in;
   mask-image: radial-gradient(var(--notch) at 0 50%, transparent 98%, #000 100%),
     radial-gradient(var(--notch) at 100% 50%, transparent 98%, #000 100%);
   mask-composite: intersect;
+}
+
+.break-token {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Entrances run in CSS so they paint on the first frame, without waiting for JavaScript. */
+@keyframes reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes rosette-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Guilloché lines engrave themselves. pathLength=1 on each curve lets one keyframe fit them all. */
+@keyframes engrave {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.engrave-line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: engrave 2.2s cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+
+.reveal {
+  animation: reveal-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.rosette-slow {
+  animation: rosette-turn 120s linear infinite;
+  transform-origin: center;
+}
+
+.marquee {
+  animation: marquee 38s linear infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -88,91 +177,15 @@ body {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-}
 
-
-/* Entrances run in CSS so they paint without waiting for JavaScript to hydrate. */
-@keyframes reveal-in {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
+  .rosette-slow,
+  .marquee {
+    animation: none;
   }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
 
-@keyframes slide-from-left {
-  from {
-    opacity: 0;
-    transform: translateX(-46px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes slide-from-right {
-  from {
-    opacity: 0;
-    transform: translateX(46px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes track-in {
-  from {
-    opacity: 0;
-    transform: scaleX(0.3);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-.reveal {
-  animation: reveal-in 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.slide-left {
-  animation: slide-from-left 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.slide-right {
-  animation: slide-from-right 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.seam-in {
-  animation: fade-in 0.45s ease-out both;
-}
-
-.track-in {
-  transform-origin: left;
-  animation: track-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .reveal,
-  .slide-left,
-  .slide-right,
-  .seam-in,
-  .track-in {
-    animation: fade-in 0.01ms both;
-    transform: none !important;
+  .engrave-line {
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+    animation: none;
   }
 }

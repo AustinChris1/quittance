@@ -1,70 +1,77 @@
 # Quittance, design truth
 
-## The one sentence
+## The world: NEAR-native, with one banknote motif
 
-The mark is a split tally: a debt was notched across a stick, then split lengthwise so each party
-held half, and matching the halves proved the obligation discharged. Quittance matches the deposit
-half to the delivery half, so the notches only read as whole when the two sides agree.
+The site belongs to the NEAR ecosystem and should look like it. Its tokens are read directly from
+near.org's own stylesheet on 2026-10-27, not approximated.
 
-Chosen by the user on 2026-10-26 over three alternatives: a perforation stub, a settlement seal,
-and a struck ledger line. Do not change the mark without asking.
+It carries one motif from security printing: a guilloché rosette, because modern banknotes are
+printed on light paper with coloured guilloché, and a quittance is a receipt for money. Everything
+else is NEAR: light first, mint, black, Mona Sans, generous space.
 
-## The world
+History, so nobody repeats it:
+- A muted slate and teal world was rejected as flat and text-heavy.
+- A dark banknote world in green, oxblood and gold was rejected for its colour and its background
+  hatching. The user asked for NEAR's look and a light mode.
 
-Dark ledger field with the receipt rendered as warm paper inset into it. The contrast is the
-brand, not decoration: ink on paper, inside a ledger. Also chosen by the user over an all-paper
-light treatment and a terminal-green treatment.
+## Hard rules from user feedback
 
-The dark field carries a faint repeating rule every 34px so it reads as ruled ledger stock rather
-than a void. The receipt reverses that: warm paper, ruled every 28px, with a mask that notches the
-left and right edges so it reads as something torn from a book.
+- **Real logos only.** Chain marks are the official ones, vendored from @web3icons (MIT) as six
+  static SVGs in `public/chains/`. Never hand-draw a chain logo. The full package is 102 MB, so it
+  is deliberately not a dependency.
+- **No background lines.** No hatching, ruled grain or texture behind content.
+- **Light and dark both work.** It follows the system theme, with a toggle that overrides.
+- **Visual over textual.** Logos, icons, figures and motion carry meaning; prose stays to a line.
 
 ## Tokens
 
-Defined once in `app/globals.css` under `@theme`. Never hard-code these values in components.
+From near.org, defined once in `app/globals.css`. Light values shown; `.dark` swaps them.
 
-| Token | Value | Use |
-| --- | --- | --- |
-| `--color-ink` | `#0b141c` | page field |
-| `--color-ink-raised` | `#111f2a` | inputs, raised panels |
-| `--color-ink-line` | `#1e3140` | hairlines on the dark field |
-| `--color-paper` | `#f6f4ee` | the receipt, and the primary button |
-| `--color-paper-line` | `#ddd8cc` | hairlines on paper |
-| `--color-tally` | `#15807a` | accent, the matched half |
-| `--color-tally-bright` | `#5fc7bf` | accent on dark, settled states |
-| `--color-caution` | `#c27318` | unresolved states, never alarm red |
-| `--color-mute` | `#8fa3b0` | secondary text |
-
-Caution is amber, never red. The product reports what it can prove; it does not alarm.
+| Token | Light | Dark | Use |
+| --- | --- | --- | --- |
+| `--bg` | `#f9f9fa` | `#000000` | page |
+| `--surface` | `#ffffff` | `#0c0c0c` | cards, inputs |
+| `--paper` | `#f2f1e9` | `#121212` | the receipt, quiet panels |
+| `--fg` | `#000000` | `#ffffff` | text, primary buttons |
+| `--muted` | `#5c5c5c` | `#acaba6` | secondary text |
+| `--line` | `#e5e5e5` | `#262626` | borders |
+| `--mint` | `#00ec97` | `#00ec97` | NEAR's signature: fills, the guilloché |
+| `--mint-ink` | `#007a4d` | `#00ec97` | mint as text; raw mint fails contrast on white |
+| `--coral` | `#ff7966` | `#ff7966` | failure and unresolved states |
+| `--cyan`, `--violet` | `#17d9d4`, `#9797ff` | same | in flight, shielded |
 
 ## Type
 
-Three faces, each with a job. Inter is deliberately absent.
+- **Mona Sans**, the face near.org uses. Display runs wide and heavy: `wdth` 112, weight 760,
+  tight tracking. Figures run wider still.
+- **Geist Mono** for evidence: hashes, field names, dates, block numbers.
 
-- **Fraunces** for display. Headlines only, tight tracking, optical sizing on.
-- **IBM Plex Sans** for interface text and prose.
-- **IBM Plex Mono** for anything that is evidence: hashes, field names, the receipt body, source
-  lines. If a value could be pasted into a ticket, it is mono.
+## The guilloché
+
+`components/guilloche.tsx`. Each ring is a hypotrochoid, the curve a rose engine cuts. Three
+details make it read as real engraving rather than a lopsided scribble, all learned by measuring:
+
+1. **Whole-number ratios.** `R / r` must be an integer or the curve fails to close in one turn.
+2. **Solve the radius from the reach.** A hypotrochoid extends to `R - r + d`, so `R` is solved to
+   land that reach inside the viewBox. Otherwise the outer rings clip.
+3. **Golden-angle phases.** Without them every ring's loops line up in one direction and crowd it.
+
+The lines draw themselves with CSS: `pathLength="1"` on each curve so one keyframe fits all.
 
 ## Motion
 
-Entrances only. `Reveal` animates opacity and transform, ease-out, 420ms, staggered by at most
-0.18s. Nothing loops except the pending dots while a lookup runs.
+GSAP ScrollTrigger in `components/scroll-cinema.tsx`: headlines rise word by word, figures roll
+over, cards lift in, the case thread draws across, the receipt assembles line by line, and the hero
+medallion recedes as you leave it. A logo marquee runs in CSS.
 
-Two hard rules the code enforces:
+Non-negotiable, each learned from shipping the failure:
 
-- `prefers-reduced-motion` drops the transform and keeps a plain fade.
-- Motion starts at zero opacity, so `@media (scripting: none)` forces `[data-reveal]` visible.
-  Without that the page is blank for anyone without JavaScript.
+1. **Content never depends on JavaScript to appear.** Above-the-fold entrances and the guilloché
+   are CSS. GSAP only ever enhances, and sets its own hidden states so a failure leaves text visible.
+2. **Never split a visible heading in JavaScript.** It flashes the text before hiding it.
+3. **`prefers-reduced-motion` disables everything** and shows the guilloché fully drawn.
 
-## Surfaces
-
-- `/` is **Persuade**. The visitor decides this is worth using. It leads with the case the project
-  was built on and the population study, both with their sources named.
-- `/check` is **Operate**. The visitor completes one task. Scanability beats expression; the
-  receipt is the product and gets the paper treatment.
-
-## Copy rules
+## Copy
 
 State what was observed and the edge of what it shows. Never claim a loss the evidence does not
-prove. No exclamation marks, no growth copy, no em-dashes. Numbers carry their source inline.
+prove. No exclamation marks, no em-dashes. Numbers carry their source.
