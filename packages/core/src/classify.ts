@@ -1,9 +1,78 @@
 import type { Evidence } from "./types.ts";
 import { CONFIDENTIAL_TREASURY } from "./types.ts";
 import { LABEL_HEADLINE, type Verdict, type Label } from "./labels.ts";
+import { formatUnits } from "./sources/http.ts";
 
 const ALWAYS_LIMIT =
   "Public data only. Solver internal state and private shard balances are not visible.";
+
+// Quoted from docs.near-intents.org/integration/market-makers/confidential-intents, read 2026-10-27.
+const FAR_LIMIT =
+  "Private here means hidden from public indexers. NEAR's documentation describes FAR as a permissioned instance of the NEAR protocol run by a small validator set, with a private RPC, so those validators can see what the public cannot.";
+
+function group(amount: string): string {
+  const [whole, frac] = amount.split(".");
+  const grouped = whole!.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const trimmed = frac?.replace(/0+$/, "");
+  return trimmed ? `${grouped}.${trimmed}` : grouped;
+}
+
+/** Names the public indexes that were asked and what they answered, and nothing more. */
+function indexBasis(e: Evidence): string[] {
+  const out: string[] = [];
+  const explorer = e.sources.find((s) => s.name === "intents.explorer.search");
+  if (explorer) {
+    const empty = e.notes.some((n) => n.startsWith("The Explorer API returned no swap matching"));
+    out.push(
+      !explorer.ok
+        ? "The Intents Explorer could not be searched."
+        : empty
+          ? "The Intents Explorer was searched and returned no record of this swap."
+          : "The Intents Explorer was searched and did not resolve this swap to a deposit address.",
+    );
+  }
+  if (!e.status.available) {
+    const called = e.sources.some((s) => s.name.startsWith("1click.status"));
+    out.push(
+      called
+        ? `The 1Click status endpoint was called and returned no status. ${e.status.reason}`
+        : "The 1Click status endpoint was not called, because no deposit address was found.",
+    );
+  }
+  return out;
+}
+
+/** True when the destination chain answered and its answer does not show the delivery. */
+function contradicted(e: Evidence): boolean {
+  const proof = e.chain.delivery;
+  return proof !== undefined && !proof.verified && proof.receiptStatus !== undefined;
+}
+
+/** Compares what arrived on chain with what the quote promised, in the token's own units. */
+function reconcile(e: Evidence): { line: string; belowMinimum: boolean } | undefined {
+  const proof = e.chain.delivery;
+  if (!e.status.available || !proof?.verified || !proof.deliveredRaw) return undefined;
+  if (!e.status.quotedAmountOut || proof.decimals === undefined) return undefined;
+  const quoted = BigInt(e.status.quotedAmountOut);
+  if (quoted === 0n) return undefined;
+  const delivered = BigInt(proof.deliveredRaw);
+  const fmt = (raw: bigint) => group(formatUnits(raw.toString(), proof.decimals!));
+  const gap = quoted - delivered;
+  const pct = (Math.abs(Number((gap * 1_000_000n) / quoted)) / 10_000).toFixed(2);
+  const min = e.status.minAmountOut ? BigInt(e.status.minAmountOut) : undefined;
+  const belowMinimum = min !== undefined && delivered < min;
+  const side = gap >= 0n ? `${pct}% under the quote` : `${pct}% over the quote`;
+  const floor =
+    min === undefined
+      ? "."
+      : belowMinimum
+        ? `, and below its guaranteed minimum of ${fmt(min)}.`
+        : `, within its guaranteed minimum of ${fmt(min)}.`;
+  return {
+    line: `The quote promised ${fmt(quoted)} and ${fmt(delivered)} arrived, ${side}${floor}`,
+    belowMinimum,
+  };
+}
 
 function isZero(amount?: string | null): boolean {
   if (amount === undefined || amount === null || amount.trim() === "") return true;
@@ -29,7 +98,8 @@ function baseLimits(e: Evidence): string[] {
 type Rule = {
   id: string;
   applies: (e: Evidence) => boolean;
-  build: (e: Evidence) => Omit<Verdict, "rule" | "headline" | "summary">;
+  /** A rule may word its own summary when the label alone would say too much. */
+  build: (e: Evidence) => Omit<Verdict, "rule" | "headline" | "summary"> & { summary?: string };
 };
 
 // Ordered. First match wins, so narrow cases are declared before broad ones.
@@ -203,6 +273,7 @@ const RULES: Rule[] = [
         basis,
         limits: [
           ALWAYS_LIMIT,
+          FAR_LIMIT,
           "A zero public balance is expected on this route and is not by itself evidence of loss.",
           "Only an internal trace against the private shard can confirm or refute delivery.",
         ],
@@ -231,20 +302,46 @@ const RULES: Rule[] = [
         "That transfer is the public shield step: the bridge mints matching tokens on the private FAR chain.",
       );
       if (e.chain.nearTxTimeIso) basis.push(`The shield landed on NEAR at ${e.chain.nearTxTimeIso}.`);
-      if (!e.status.available) {
-        basis.push(
-          "Neither the status endpoint nor the Explorer indexes this swap, which is expected for a confidential route.",
-        );
-      }
+      basis.push(...indexBasis(e));
       return {
         label: "SHIELDED_UNPROVEN",
         basis,
         limits: [
           ALWAYS_LIMIT,
+          FAR_LIMIT,
           "What happens after the shield lives on the private FAR chain, which no public record can see.",
           "This proves the money was shielded. It does not prove it was delivered, and it does not prove it was lost.",
         ],
         next: "If you meant to send to a public destination, this may be a misroute: ask the operator for an internal trace, quoting this NEAR transaction. If you chose a confidential route, keep this receipt as evidence of the shield.",
+      };
+    },
+  },
+  {
+    // The operator published a destination hash, but that chain's own receipt does not show the
+    // quoted token reaching the quoted recipient. That is not a delivery, whatever the status says.
+    id: "contradicted/destination-chain-disagrees",
+    applies: (e) =>
+      e.status.available &&
+      e.status.status === "SUCCESS" &&
+      e.status.destinationChainTxHashes.length > 0 &&
+      contradicted(e),
+    build: (e) => {
+      const proof = e.chain.delivery!;
+      const tx = e.status.available ? e.status.destinationChainTxHashes[0]! : undefined;
+      const basis = ["The 1Click status reads SUCCESS."];
+      if (tx) basis.push(`A destination transaction is published: ${tx.hash} on ${tx.chain}.`);
+      basis.push(
+        `Read independently from ${proof.chain}: receipt status ${proof.receiptStatus}. ${proof.reason ?? "The receipt does not show the quoted token reaching the quoted recipient."}`,
+      );
+      return {
+        label: "UNDETERMINED",
+        summary: `The operator reports this delivered, but ${titleCase(proof.chain)} does not show the money arriving.`,
+        basis,
+        limits: [
+          ALWAYS_LIMIT,
+          "A delivery made by a different transaction than the one published would not be seen here.",
+        ],
+        next: "Ask the operator for an internal trace and attach this receipt: the transaction they published does not move the quoted token to the quoted recipient.",
       };
     },
   },
@@ -263,23 +360,26 @@ const RULES: Rule[] = [
       if (proof?.verified) {
         const where = proof.blockNumber ? ` in block ${proof.blockNumber}` : "";
         const when = proof.blockTimeIso ? ` at ${proof.blockTimeIso}` : "";
+        const amount = proof.deliveredFormatted ? group(proof.deliveredFormatted) : "the expected token";
         basis.push(
-          `Read independently from ${proof.chain}: ${proof.deliveredFormatted ?? "the expected token"} reached the quoted recipient${where}${when}, receipt status ${proof.receiptStatus ?? "unknown"}.`,
+          `Read independently from ${proof.chain}: ${amount} reached the quoted recipient${where}${when}, receipt status ${proof.receiptStatus ?? "unknown"}.`,
         );
       } else if (proof?.reason) {
-        basis.push(
-          `The destination receipt was read on ${proof.chain} and did not confirm delivery: ${proof.reason}`,
-        );
-        limits.push("A reported SUCCESS the destination chain does not confirm needs an internal trace.");
+        basis.push(`The destination receipt could not be read on ${proof.chain}: ${proof.reason}`);
+        limits.push("Delivery rests on the operator record alone until the destination chain can be read.");
       } else {
         limits.push("The destination receipt was not read, so delivery rests on the operator record alone.");
       }
-      limits.push("The amount received was not reconciled against the quoted amount.");
+      const amounts = reconcile(e);
+      if (amounts) basis.push(amounts.line);
+      else limits.push("The amount received was not reconciled against the quoted amount.");
       return {
         label: "DELIVERED",
         basis,
         limits,
-        next: "Nothing to do. Keep this receipt if you need to evidence the settlement later.",
+        next: amounts?.belowMinimum
+          ? "Less arrived than the quote guaranteed. Raise it with the operator and attach this receipt."
+          : "Nothing to do. Keep this receipt if you need to evidence the settlement later.",
       };
     },
   },
@@ -329,10 +429,17 @@ function summarize(label: Label, e: Evidence): string {
       if (proof?.verified) {
         const started = e.chain.deposits[0]?.blockTimestampIso ?? e.chain.nearTxTimeIso;
         const days = daysBetween(started, proof.blockTimeIso);
-        const when = days === null ? "" : days === 0 ? " the same day" : ` ${days} day${days === 1 ? "" : "s"} after the deposit`;
+        // Rounded to whole days, so say so: 15 days 19 hours reads as about 16.
+        const when = days === null ? "" : days === 0 ? " the same day" : ` about ${days} day${days === 1 ? "" : "s"} after the deposit`;
+        if (reconcile(e)?.belowMinimum) {
+          return `Delivered on ${titleCase(proof.chain)}${when}, but less arrived than the quote guaranteed.`;
+        }
         return `Delivered on ${titleCase(proof.chain)}${when}, and proven on that chain rather than taken on trust.`;
       }
-      return "The operator reports this delivered, with a published destination transaction.";
+      if (proof) {
+        return `The operator reports this delivered. ${titleCase(proof.chain)} could not be reached to confirm it.`;
+      }
+      return "The operator reports this delivered. The destination chain was not checked independently.";
     }
     case "REFUNDED_OK":
       return "The swap did not go through, and the money went back to the refund address.";
@@ -362,7 +469,7 @@ export function classify(evidence: Evidence): Classification {
         ...partial,
         rule: rule.id,
         headline: LABEL_HEADLINE[partial.label],
-        summary: summarize(partial.label, evidence),
+        summary: partial.summary ?? summarize(partial.label, evidence),
       },
       rulesEvaluated: evaluated,
     };
@@ -380,7 +487,7 @@ export function classify(evidence: Evidence): Classification {
       ],
       next:
         !evidence.status.available && !evidence.chain.checked
-          ? "Neither the status endpoint nor the Explorer has a record of this. Confidential routes are not publicly indexed, so paste the NEAR transaction hash from your wallet instead; Quittance can read the shield from it."
+          ? "No public index has a record of this. The usual reasons are a quote that expired before any deposit, a mistyped address, or a confidential route, which public indexers do not show. If the money left a NEAR account, paste that NEAR transaction hash instead; Quittance can read a shield from it."
           : "Confirm the deposit address is the one the quote issued, and supply the NEAR transaction hash if you have it. If the evidence still does not match a known pattern, file it as a new case.",
     },
     rulesEvaluated: evaluated,

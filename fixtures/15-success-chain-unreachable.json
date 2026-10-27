@@ -1,0 +1,62 @@
+{
+  "case": {
+    "id": "15-success-chain-unreachable",
+    "expectedLabel": "DELIVERED",
+    "title": "When the destination chain cannot be read, delivery rests on the operator record and says so",
+    "frozenAt": "2026-10-27",
+    "provenance": {
+      "status": "Synthetic regression guard. An unreachable chain is not a contradiction, and not a proof either."
+    }
+  },
+  "evidence": {
+    "input": {
+      "nearTxHash": "3djtQ3pUHv8SGtNKS3CMGice7E7S9oeS4DJzNYyjCUVD"
+    },
+    "fetchedAt": "2026-10-27T00:00:00.000Z",
+    "mode": "authenticated",
+    "status": {
+      "available": true,
+      "status": "SUCCESS",
+      "correlationId": "00000000-0000-4000-8000-000000000013",
+      "updatedAt": "2026-10-27T00:00:00.000Z",
+      "recipientType": "DESTINATION_CHAIN",
+      "refundedAmount": "0",
+      "refundAmountKnown": true,
+      "refundReason": null,
+      "originChainTxHashes": [],
+      "destinationChainTxHashes": [
+        {
+          "chain": "destination",
+          "hash": "0xcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+        }
+      ],
+      "nearTxHashes": [],
+      "intentHashes": []
+    },
+    "chain": {
+      "checked": true,
+      "deposits": [],
+      "delivery": {
+        "verified": false,
+        "chain": "ethereum",
+        "tx": "0xcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+        "reason": "The destination transaction was not returned by any of the 4 endpoints tried on that chain."
+      }
+    },
+    "sources": [
+      {
+        "name": "intents.explorer.search",
+        "url": "https://explorer.near-intents.org/api/v0/transactions?search=3djtQ3pUHv8SGtNKS3CMGice7E7S9oeS4DJzNYyjCUVD",
+        "readAt": "2026-10-27T00:00:00.000Z",
+        "ok": true
+      },
+      {
+        "name": "nearblocks.txn",
+        "url": "https://api.nearblocks.io/v1/txns/3djtQ3pUHv8SGtNKS3CMGice7E7S9oeS4DJzNYyjCUVD",
+        "readAt": "2026-10-27T00:00:00.000Z",
+        "ok": true
+      }
+    ],
+    "notes": []
+  }
+}

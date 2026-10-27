@@ -38,7 +38,7 @@
       "deposits": [],
       "intentTransfers": [
         {
-          "signer": "78a41c32",
+          "signer": "78a41c323162603a5bde078ea031350d44a489aa0e10306b047a387283d197bf",
           "receiver": "51e8f94d77b5e90dc9852ca6113771e11e8382ce69473a75e313e41665de7cbe",
           "token": "ETH (Robinhood Chain)",
           "amountRaw": "38000000000000000",
@@ -58,6 +58,12 @@
     },
     "sources": [
       {
+        "name": "intents.explorer.search",
+        "url": "https://explorer.near-intents.org/api/v0/transactions?search=3djtQ3pUHv8SGtNKS3CMGice7E7S9oeS4DJzNYyjCUVD",
+        "readAt": "2026-10-27T00:00:00.000Z",
+        "ok": true
+      },
+      {
         "name": "nearblocks.txn",
         "url": "https://api.nearblocks.io/v1/txns/3djtQ3pUHv8SGtNKS3CMGice7E7S9oeS4DJzNYyjCUVD",
         "readAt": "2026-10-27T00:00:00.000Z",
@@ -65,7 +71,7 @@
       }
     ],
     "notes": [
-      "Neither the status endpoint nor the Explorer indexes this swap, which is expected for a confidential route."
+      "The Explorer API returned no swap matching 3djtQ3pUHv8SGtNKS3CMGice7E7S9oeS4DJzNYyjCUVD."
     ]
   }
 }

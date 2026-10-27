@@ -53,6 +53,7 @@ export type DeliveryProof = {
   /** The transfer of the expected token to the expected recipient, if one is present. */
   deliveredRaw?: string;
   deliveredFormatted?: string;
+  decimals?: number;
   recipientMatched?: boolean;
   reason?: string;
 };
@@ -161,6 +162,7 @@ export async function verifyEvmDelivery(params: {
         blockTimeIso,
         deliveredRaw: raw,
         deliveredFormatted: formatUnits(raw, Number.isFinite(decimals) ? decimals : 18),
+        decimals: Number.isFinite(decimals) ? decimals : undefined,
         recipientMatched: Boolean(recipient),
       },
       sources,

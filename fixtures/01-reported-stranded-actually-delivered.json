@@ -13,7 +13,7 @@
         "The 1Click status endpoint reports SUCCESS with updatedAt 2026-09-27T11:16:47.000Z, matching the Ethereum block time.",
         "2026-10-09 forum thread 42664 states the swap has read FAILED since 2026-09-12 with refundedAmount 0 and no support response."
       ],
-      "note": "The poster cited refundedAmount 0 as evidence of loss. On a settled swap that field is correctly zero because no refund was due. Settlement took 16 days, which is why a status read during that window was so misleading.",
+      "note": "The poster cited refundedAmount 0 as evidence of loss. On a settled swap that field is correctly zero because no refund was due. Settlement took about 16 days, 15 days and 19 hours, which is why a status read during that window was so misleading.",
       "verifiedIndependently": "The destination transfer was confirmed by querying an Ethereum node directly, not by trusting the operator record. Amount, recipient and receipt status all match.",
       "links": [
         "https://gov.near.org/t/failed-near-intents-1-click-swap-575-830-trx-193k-stuck-failed-status-zero-refund-no-support-response/42664",
@@ -63,7 +63,10 @@
         "E887Y77MhajfbvNg7x1HbPAHPo7vzNs8JnFC5Ed15nmB"
       ],
       "intentHashes": [],
-      "refundedAmount": "0"
+      "refundedAmount": "0",
+      "quotedAmountOut": "191757901149",
+      "quotedAmountOutFormatted": "191757.901149",
+      "minAmountOut": "189840322137"
     },
     "chain": {
       "checked": true,
@@ -96,7 +99,8 @@
         "blockTimeIso": "2026-09-27T11:16:35.000Z",
         "deliveredRaw": "190995293894",
         "deliveredFormatted": "190995.293894",
-        "recipientMatched": true
+        "recipientMatched": true,
+        "decimals": 6
       },
       "nearTxTimeIso": "2026-09-11T16:27:04.048Z"
     },
@@ -123,7 +127,7 @@
       }
     ],
     "notes": [
-      "Settlement took 16 days. A status read at any point in that window would have been misleading.",
+      "Settlement took about 16 days. A status read at any point in that window would have been misleading.",
       "The public report of this swap as stranded was filed 12 days after delivery.",
       "The correlation id is a per-request trace and changes on every call, so the identifier the complaint quotes was never resolvable."
     ]

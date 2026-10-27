@@ -133,7 +133,7 @@ async function cmdReplay(args: Args): Promise<void> {
 
 function cmdCases(): void {
   for (const fixture of loadFixtures()) {
-    console.log(`${fixture.case.id.padEnd(30)} ${fixture.case.expectedLabel.padEnd(19)} ${fixture.case.title}`);
+    console.log(`${fixture.case.id.padEnd(41)} ${fixture.case.expectedLabel.padEnd(19)} ${fixture.case.title}`);
   }
 }
 
@@ -142,8 +142,8 @@ function cmdVerify(): void {
   const durations: number[] = [];
   let correct = 0;
 
-  console.log("case                           expected            actual              ms");
-  console.log("-".repeat(78));
+  console.log(`${" case".padEnd(42)}${"expected".padEnd(20)}${"actual".padEnd(20)}ms`);
+  console.log("-".repeat(86));
   for (const fixture of fixtures) {
     const started = performance.now();
     const { verdict } = classify(fixture.evidence);
@@ -153,13 +153,13 @@ function cmdVerify(): void {
     const ok = verdict.label === fixture.case.expectedLabel;
     if (ok) correct += 1;
     console.log(
-      `${ok ? " " : "x"}${fixture.case.id.padEnd(32)}${fixture.case.expectedLabel.padEnd(20)}${verdict.label.padEnd(20)}${ms.toFixed(1)}`,
+      `${ok ? " " : "x"}${fixture.case.id.padEnd(41)}${fixture.case.expectedLabel.padEnd(20)}${verdict.label.padEnd(20)}${ms.toFixed(1)}`,
     );
   }
 
   const sorted = [...durations].sort((a, b) => a - b);
   const median = sorted[Math.floor(sorted.length / 2)] ?? 0;
-  console.log("-".repeat(78));
+  console.log("-".repeat(86));
   console.log(`labels correct        ${correct} of ${fixtures.length}`);
   console.log(`median classify time  ${median.toFixed(1)} ms (classification only, no network)`);
   if (correct !== fixtures.length) process.exitCode = 1;

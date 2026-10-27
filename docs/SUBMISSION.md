@@ -83,7 +83,7 @@ carries the first impression.
 > the correlation id every support thread quotes identifies one HTTP request, not the swap.
 >
 > Quittance holds no keys, moves no funds, files nothing on anyone's behalf and claims no recovered
-> money. Thirteen frozen cases, each with provenance separating what was verified on chain from what was
+> money. Fifteen frozen cases, each with provenance separating what was verified on chain from what was
 > only reported. Run `node apps/cli/src/main.ts verify` to check the labels yourself.
 
 ## Honesty note to keep in the README

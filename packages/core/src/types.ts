@@ -48,6 +48,10 @@ export type StatusEvidence =
       amountIn?: string;
       amountInFormatted?: string;
       amountOut?: string;
+      /** What the quote promised, and the floor its slippage tolerance guarantees, in raw units. */
+      quotedAmountOut?: string;
+      quotedAmountOutFormatted?: string;
+      minAmountOut?: string;
       refundedAmount?: string;
       /** False when the source cannot report a refund amount, so absence proves nothing. */
       refundAmountKnown?: boolean;
@@ -81,6 +85,8 @@ export type DeliveryProof = {
   blockTimeIso?: string;
   deliveredRaw?: string;
   deliveredFormatted?: string;
+  /** Read from the token contract, so quoted and delivered amounts compare in the same units. */
+  decimals?: number;
   recipientMatched?: boolean;
   reason?: string;
 };

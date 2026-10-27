@@ -24,7 +24,7 @@ function loadFixtures(): Fixture[] {
 const fixtures = loadFixtures();
 
 test("every fixture is classified as its recorded label", () => {
-  assert.ok(fixtures.length >= 13, "expected the full frozen case set");
+  assert.ok(fixtures.length >= 15, "expected the full frozen case set");
   for (const fixture of fixtures) {
     const { verdict } = classify(fixture.evidence);
     assert.equal(

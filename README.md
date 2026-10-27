@@ -20,13 +20,15 @@ The most cited stuck deposit in the ecosystem, 575,830 TRX reported on the NEAR 
 | 2026-09-27 11:16:35Z | 190,995.293894 USDT delivered to `0x632f...8bad` | Ethereum block 26,068,435 |
 | 2026-10-09 | Forum post: FAILED since 12 Sep, zero refund, no reply | gov.near.org thread 42664 |
 
-Settlement took 16 days. The public report of a loss was filed 12 days after the money arrived,
+Settlement took about 16 days, 15 days and 19 hours from deposit to delivery. The public report of a loss was filed 12 days after the money arrived,
 and the thread is still open and still unanswered. The poster cited `refundedAmount: 0` as proof
 they got nothing back, when on a settled swap that field is correctly zero because no refund was
 due. A healthy field read as a symptom.
 
 The Ethereum transfer was confirmed by querying an Ethereum node directly, not by trusting the
-operator's record. That is the whole thesis: a status word is not an answer, in either direction.
+operator's record. The amount reconciles too: the quote promised 191,757.901149 USDT with a
+guaranteed minimum of 189,840.322137 at 1 percent slippage, and 190,995.293894 arrived, 0.40
+percent under the quote and inside its guarantee. That is the whole thesis: a status word is not an answer, in either direction.
 
 ## How big is this, beyond one case
 
@@ -66,7 +68,7 @@ Requires Node 24 or newer (`node --version`).
 node apps/cli/src/main.ts verify
 ```
 
-Expect `labels correct 13 of 13` and a median classify time under a millisecond.
+Expect `labels correct 15 of 15` and a median classify time under a millisecond.
 
 **Step 2 - print the receipt for the case above.**
 
@@ -100,7 +102,7 @@ node apps/cli/src/main.ts check --search 8a33DkKfZMWRKbK2pXuQAWVLXSy4AyZF6PfcENv
 This is the full chain: a transaction hash resolves through the Explorer to its deposit address,
 the status fields come back, and the verdict turns from `UNDETERMINED` into `DELIVERED`. It is the
 one thing a partner token genuinely unlocks. The receipt opens with one plain sentence: *Delivered
-on Ethereum 16 days after the deposit, and proven on that chain rather than taken on trust.*
+on Ethereum about 16 days after the deposit, and proven on that chain rather than taken on trust.*
 
 **Step 3c - a confidential swap, which no public index can see.**
 
@@ -114,7 +116,14 @@ endpoint nor the Explorer has any record of it. The only public trace is a succe
 `execute_intents` call that emits no ordinary token events at all, so Quittance decodes the signed
 NEP-413 intent inside it: 0.038 ETH on Robinhood Chain, transferred to the documented Confidential
 Intents treasury. That is the shield step. The receipt says so, and says just as plainly that
-public records can prove neither delivery nor loss from there.
+public records can prove neither delivery nor loss from there. It names only the lookups it
+actually made: the Explorer was searched and had nothing, and the status endpoint was never called
+because no deposit address exists to call it with.
+
+"Private" has a precise meaning here, and the receipt states it. NEAR's
+[Confidential Intents documentation](https://docs.near-intents.org/integration/market-makers/confidential-intents)
+describes FAR as a permissioned instance of the NEAR protocol run by a small validator set, with
+a private RPC. So the balances are hidden from public indexers, not from those validators.
 
 **Step 4 - close the loop into an endpoint you control.**
 
@@ -188,7 +197,7 @@ resolves through the Explorer instead.
 | `WRONG_DOOR` | Deposit does not match the quote it was made for, wrong chain or wrong asset. |
 | `LOCKED_OUT` | A refund exists on paper but the connector timelock puts it out of reach. |
 | `SHIELDED_UNPROVEN` | The route is private. Public records cannot prove delivery either way. |
-| `DELIVERED` | A destination transaction is published. |
+| `DELIVERED` | A destination transaction is published, and read from the destination chain where it can be. |
 | `REFUNDED_OK` | The money went back to the refund address. |
 | `IN_FLIGHT` | Not terminal yet. |
 | `UNDETERMINED` | Not enough evidence. A gap in the rules, not a clean bill of health. |
@@ -224,6 +233,8 @@ open and unanswered in `near/intents` when they were recorded.
 | `10-stranded-synthetic` | Synthetic. We hold no verified real STRANDED case, and say so rather than implying one |
 | `11`, `12` | The two confidential swaps in [near/intents#384](https://github.com/near/intents/issues/384), read from their signed intents: [0.038 ETH](https://nearblocks.io/txns/3djtQ3pUHv8SGtNKS3CMGice7E7S9oeS4DJzNYyjCUVD) and [0.001 ETH](https://nearblocks.io/txns/jNeJZQ4pa4p69LBiEvTDbTj2WmhCgiKRY2a2scA193j) |
 | `13-shield-then-delivered` | Regression guard. A proven delivery beats a shield step, so the treasury rule never hides an arrival |
+| `14-success-contradicted-by-chain` | Regression guard. A SUCCESS whose published destination transaction pays someone else reads `UNDETERMINED`, never `DELIVERED` |
+| `15-success-chain-unreachable` | Regression guard. When the destination chain cannot be reached, `DELIVERED` rests on the operator record and the receipt says so |
 
 On case 01 the chain was the better witness, and it overturned the report. The deposit confirms at
 block 215,243,812 with a block timestamp of 2026-09-11T16:27:04Z, one day earlier than the forum

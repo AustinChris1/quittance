@@ -23,14 +23,14 @@
     "mode": "authenticated",
     "status": {
       "available": false,
-      "reason": "The operator has no record of this deposit address. Either the quote was never created, or the address belongs to a different route."
+      "reason": "No deposit address was available, so the status endpoint was not called."
     },
     "chain": {
       "checked": true,
       "deposits": [],
       "intentTransfers": [
         {
-          "signer": "8a30b9cfbf06",
+          "signer": "8a30b9cfbf066b91092d9b3eb9c4306ca31a833942c4e6cfa59a2815a9e0ae2f",
           "receiver": "51e8f94d77b5e90dc9852ca6113771e11e8382ce69473a75e313e41665de7cbe",
           "token": "ETH (Robinhood Chain)",
           "amountRaw": "1000000000000000",
@@ -41,6 +41,12 @@
     },
     "sources": [
       {
+        "name": "intents.explorer.search",
+        "url": "https://explorer.near-intents.org/api/v0/transactions?search=jNeJZQ4pa4p69LBiEvTDbTj2WmhCgiKRY2a2scA193j",
+        "readAt": "2026-10-27T00:00:00.000Z",
+        "ok": true
+      },
+      {
         "name": "nearblocks.txn",
         "url": "https://api.nearblocks.io/v1/txns/jNeJZQ4pa4p69LBiEvTDbTj2WmhCgiKRY2a2scA193j",
         "readAt": "2026-10-27T00:00:00.000Z",
@@ -48,7 +54,7 @@
       }
     ],
     "notes": [
-      "Neither the status endpoint nor the Explorer indexes this swap, which is expected for a confidential route."
+      "The Explorer API returned no swap matching jNeJZQ4pa4p69LBiEvTDbTj2WmhCgiKRY2a2scA193j."
     ]
   }
 }

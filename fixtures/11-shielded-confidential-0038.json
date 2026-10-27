@@ -23,7 +23,7 @@
     "mode": "authenticated",
     "status": {
       "available": false,
-      "reason": "The operator has no record of this deposit address. Either the quote was never created, or the address belongs to a different route."
+      "reason": "No deposit address was available, so the status endpoint was not called."
     },
     "chain": {
       "checked": true,
@@ -41,6 +41,12 @@
     },
     "sources": [
       {
+        "name": "intents.explorer.search",
+        "url": "https://explorer.near-intents.org/api/v0/transactions?search=3djtQ3pUHv8SGtNKS3CMGice7E7S9oeS4DJzNYyjCUVD",
+        "readAt": "2026-10-27T00:00:00.000Z",
+        "ok": true
+      },
+      {
         "name": "nearblocks.txn",
         "url": "https://api.nearblocks.io/v1/txns/3djtQ3pUHv8SGtNKS3CMGice7E7S9oeS4DJzNYyjCUVD",
         "readAt": "2026-10-27T00:00:00.000Z",
@@ -48,7 +54,7 @@
       }
     ],
     "notes": [
-      "Neither the status endpoint nor the Explorer indexes this swap, which is expected for a confidential route."
+      "The Explorer API returned no swap matching 3djtQ3pUHv8SGtNKS3CMGice7E7S9oeS4DJzNYyjCUVD."
     ]
   }
 }
