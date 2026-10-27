@@ -7,16 +7,32 @@ const TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a
 /** Intents asset ids look like nep141:eth-0xdac17f...omft.near. */
 const ASSET_PATTERN = /^nep141:([a-z0-9]+)-(0x[0-9a-fA-F]{40})\.omft\.near$/;
 
-export const EVM_RPCS: Record<string, { name: string; url: string }> = {
-  eth: { name: "ethereum", url: "https://ethereum-rpc.publicnode.com" },
-  base: { name: "base", url: "https://base-rpc.publicnode.com" },
-  arb: { name: "arbitrum", url: "https://arbitrum-one-rpc.publicnode.com" },
-  op: { name: "optimism", url: "https://optimism-rpc.publicnode.com" },
-  pol: { name: "polygon", url: "https://polygon-bor-rpc.publicnode.com" },
-  bsc: { name: "bsc", url: "https://bsc-rpc.publicnode.com" },
+// Several endpoints per chain: public RPCs often refuse datacenter traffic.
+export const EVM_RPCS: Record<string, { name: string; urls: string[] }> = {
+  eth: {
+    name: "ethereum",
+    urls: [
+      "https://ethereum-rpc.publicnode.com",
+      "https://eth.llamarpc.com",
+      "https://cloudflare-eth.com",
+      "https://eth.drpc.org",
+      "https://rpc.ankr.com/eth",
+    ],
+  },
+  base: {
+    name: "base",
+    urls: ["https://base-rpc.publicnode.com", "https://mainnet.base.org", "https://base.llamarpc.com"],
+  },
+  arb: {
+    name: "arbitrum",
+    urls: ["https://arbitrum-one-rpc.publicnode.com", "https://arb1.arbitrum.io/rpc"],
+  },
+  op: { name: "optimism", urls: ["https://optimism-rpc.publicnode.com", "https://mainnet.optimism.io"] },
+  pol: { name: "polygon", urls: ["https://polygon-bor-rpc.publicnode.com", "https://polygon-rpc.com"] },
+  bsc: { name: "bsc", urls: ["https://bsc-rpc.publicnode.com", "https://bsc-dataseed.binance.org"] },
 };
 
-export type EvmAsset = { chainKey: string; chainName: string; token: string; rpc: string };
+export type EvmAsset = { chainKey: string; chainName: string; token: string; rpcs: string[] };
 
 export function parseEvmAsset(assetId?: string): EvmAsset | undefined {
   const match = ASSET_PATTERN.exec(assetId ?? "");
@@ -24,7 +40,7 @@ export function parseEvmAsset(assetId?: string): EvmAsset | undefined {
   const [, prefix, token] = match;
   const chain = EVM_RPCS[prefix!];
   if (!chain) return undefined;
-  return { chainKey: prefix!, chainName: chain.name, token: token!.toLowerCase(), rpc: chain.url };
+  return { chainKey: prefix!, chainName: chain.name, token: token!.toLowerCase(), rpcs: chain.urls };
 }
 
 export type DeliveryProof = {
@@ -61,22 +77,43 @@ export async function verifyEvmDelivery(params: {
   recipient?: string;
   rpcUrl?: string;
 }): Promise<{ proof: DeliveryProof; sources: SourceRef[] }> {
-  const url = params.rpcUrl ?? params.asset.rpc;
+  const candidates = params.rpcUrl ? [params.rpcUrl] : params.asset.rpcs;
   const sources: SourceRef[] = [];
   const base: DeliveryProof = { verified: false, chain: params.asset.chainName, tx: params.txHash };
 
-  const receipt = await rpc<{
+  type Receipt = {
     status?: string;
     blockNumber?: string;
     logs?: { address?: string; topics?: string[]; data?: string }[];
-  }>(url, "eth_getTransactionReceipt", [params.txHash], `evm.receipt:${params.asset.chainName}`);
-  sources.push(receipt.source);
+  };
 
-  if (!receipt.ok || !receipt.data.result) {
-    return { proof: { ...base, reason: "The destination transaction was not found on that chain." }, sources };
+  // Public endpoints often answer 200 with an empty result from datacenter IPs, so try in turn.
+  let url = candidates[0]!;
+  let result: Receipt | undefined;
+  for (const candidate of candidates) {
+    const attempt = await rpc<Receipt>(
+      candidate,
+      "eth_getTransactionReceipt",
+      [params.txHash],
+      `evm.receipt:${params.asset.chainName}`,
+    );
+    sources.push(attempt.source);
+    if (attempt.ok && attempt.data.result) {
+      url = candidate;
+      result = attempt.data.result;
+      break;
+    }
   }
 
-  const result = receipt.data.result;
+  if (!result) {
+    return {
+      proof: {
+        ...base,
+        reason: `The destination transaction was not returned by any of the ${candidates.length} endpoints tried on that chain.`,
+      },
+      sources,
+    };
+  }
   const receiptStatus = result.status === "0x1" ? "success" : "failed";
 
   let blockTimeIso: string | undefined;
