@@ -3,7 +3,7 @@
 A receipt for money that crossed chains.
 
 When a NEAR Intents swap says it failed, or says it succeeded and nothing arrives, Quittance
-takes the deposit, reads only public records, and returns one of four labels plus the evidence
+takes the deposit, reads only public records, and returns one of eight labels plus the evidence
 behind it. It holds no keys, moves no funds, and opens no support tickets.
 
 A quittance is an old legal word for a written receipt proving an obligation has been discharged.
@@ -222,6 +222,8 @@ open and unanswered in `near/intents` when they were recorded.
 | `04-shielded-unproven` | [near/intents#384](https://github.com/near/intents/issues/384) |
 | `05`, `06`, `08`, `09` | Controls and regression guards, so the rules are shown not to label every swap a failure |
 | `10-stranded-synthetic` | Synthetic. We hold no verified real STRANDED case, and say so rather than implying one |
+| `11`, `12` | The two confidential swaps in [near/intents#384](https://github.com/near/intents/issues/384), read from their signed intents: [0.038 ETH](https://nearblocks.io/txns/3djtQ3pUHv8SGtNKS3CMGice7E7S9oeS4DJzNYyjCUVD) and [0.001 ETH](https://nearblocks.io/txns/jNeJZQ4pa4p69LBiEvTDbTj2WmhCgiKRY2a2scA193j) |
+| `13-shield-then-delivered` | Regression guard. A proven delivery beats a shield step, so the treasury rule never hides an arrival |
 
 On case 01 the chain was the better witness, and it overturned the report. The deposit confirms at
 block 215,243,812 with a block timestamp of 2026-09-11T16:27:04Z, one day earlier than the forum
@@ -234,7 +236,7 @@ not the claim, and its provenance block carries the full timeline.
 packages/core/src/classify.ts     ordered rules, first match wins
 packages/core/src/receipt.ts      canonical JSON, sha256 fingerprint, text rendering
 packages/core/src/gather.ts       assembles evidence from the readers
-packages/core/src/sources/        1Click status, NEAR RPC, NearBlocks
+packages/core/src/sources/        1Click status, Explorer, NEAR RPC, NearBlocks, EVM receipts
 packages/core/src/webhook.ts      the only write, HMAC signed
 apps/cli/src/main.ts              check, replay, cases, verify, rules
 apps/sink/src/main.ts             reference receiver, stands in for an integrator endpoint

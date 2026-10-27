@@ -12,7 +12,7 @@ Everything here is ready to use on 1 November. Submissions open 1 Nov 00:00 UTC 
 
 Both links are required and the submission cannot be edited afterwards.
 
-## Demo script, 70 seconds, one screen
+## Demo script, 90 seconds, one screen
 
 Record the browser at `https://quittance-five.vercel.app`. No terminal, no slides.
 
@@ -83,7 +83,7 @@ carries the first impression.
 > the correlation id every support thread quotes identifies one HTTP request, not the swap.
 >
 > Quittance holds no keys, moves no funds, files nothing on anyone's behalf and claims no recovered
-> money. Ten frozen cases, each with provenance separating what was verified on chain from what was
+> money. Thirteen frozen cases, each with provenance separating what was verified on chain from what was
 > only reported. Run `node apps/cli/src/main.ts verify` to check the labels yourself.
 
 ## Honesty note to keep in the README
