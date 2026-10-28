@@ -17,11 +17,23 @@ const mono = Geist_Mono({
   display: "swap",
 });
 
+const DESCRIPTION =
+  "A receipt for money that crossed chains. Both ends of a NEAR Intents swap, proven on the chains they happened on.";
+
 export const metadata: Metadata = {
+  metadataBase: new URL("https://quittance-five.vercel.app"),
   title: "Quittance",
-  description:
-    "A receipt for money that crossed chains. Resolves what actually happened to a NEAR Intents swap, and proves it.",
-  icons: { icon: "/icon.svg" },
+  description: DESCRIPTION,
+  icons: { icon: "/icon.svg", apple: "/apple-touch-icon.png" },
+  // The card a link unfurls into on X, Telegram and Discord.
+  openGraph: {
+    title: "Quittance",
+    description: DESCRIPTION,
+    url: "/",
+    siteName: "Quittance",
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "Quittance: 575,830 TRX in, proven on TRON; 190,995.29 USDT out, proven on Ethereum" }],
+  },
+  twitter: { card: "summary_large_image", title: "Quittance", description: DESCRIPTION, images: ["/og.png"] },
 };
 
 export const viewport: Viewport = {

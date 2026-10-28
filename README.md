@@ -309,6 +309,13 @@ fixtures/                         frozen cases with provenance
 Receipts are fingerprinted with a sha256 over canonical JSON, so two runs over the same evidence
 produce the same fingerprint and any change to the evidence changes it.
 
+## Brand
+
+The mark is a split tally: a debt notched across a stick, split so each party held half, proven
+discharged when the halves matched, which is how Quittance matches a swap's deposit to its
+delivery. The kit, with marks, icons, lockups, the social card and the X banner, is in
+[`brand/`](brand/README.md).
+
 ## Built for
 
 NEAR Hackathon, 1 to 14 November 2026. Tracks: Unstoppable DeFi, Real-World Money, Privacy and
