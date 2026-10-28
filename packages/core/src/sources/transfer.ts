@@ -4,6 +4,7 @@ import { resolveToken, chainName } from "./tokens.ts";
 import { EVM_RPCS, parseEvmAsset, verifyEvmTransfer } from "./evm.ts";
 import { verifyTronTransfer } from "./tron.ts";
 import { verifySolanaTransfer } from "./solana.ts";
+import { txUrl } from "./explorers.ts";
 
 export type TransferCheck = {
   proof?: DeliveryProof;
@@ -30,7 +31,7 @@ export async function proveTransfer(params: { assetId?: string; txHash: string; 
     const evm = parseEvmAsset(params.assetId);
     if (!evm) return { sources, unsupported: params.assetId ?? "unknown asset" };
     const r = await verifyEvmTransfer({ blockchain: evm.chainKey, txHash: params.txHash, contract: evm.token, recipient: params.to });
-    return { proof: r.proof, sources: [...sources, ...r.sources] };
+    return { proof: { ...r.proof, explorerUrl: txUrl(r.proof.chain, r.proof.tx) }, sources: [...sources, ...r.sources] };
   }
 
   const chain = token.blockchain;
@@ -43,7 +44,7 @@ export async function proveTransfer(params: { assetId?: string; txHash: string; 
       decimals: token.decimals,
       recipient: params.to,
     });
-    return { proof: { ...r.proof, symbol: token.symbol }, sources: [...sources, ...r.sources] };
+    return { proof: { ...r.proof, symbol: token.symbol, explorerUrl: txUrl(r.proof.chain, r.proof.tx) }, sources: [...sources, ...r.sources] };
   }
   if (chain === "tron") {
     const r = await verifyTronTransfer({
@@ -52,7 +53,7 @@ export async function proveTransfer(params: { assetId?: string; txHash: string; 
       decimals: token.decimals,
       recipient: params.to,
     });
-    return { proof: { ...r.proof, symbol: token.symbol }, sources: [...sources, ...r.sources] };
+    return { proof: { ...r.proof, symbol: token.symbol, explorerUrl: txUrl(r.proof.chain, r.proof.tx) }, sources: [...sources, ...r.sources] };
   }
   if (chain === "sol") {
     const r = await verifySolanaTransfer({
@@ -61,7 +62,7 @@ export async function proveTransfer(params: { assetId?: string; txHash: string; 
       decimals: token.decimals,
       recipient: params.to,
     });
-    return { proof: { ...r.proof, symbol: token.symbol }, sources: [...sources, ...r.sources] };
+    return { proof: { ...r.proof, symbol: token.symbol, explorerUrl: txUrl(r.proof.chain, r.proof.tx) }, sources: [...sources, ...r.sources] };
   }
   return { sources, unsupported: chainName(chain) };
 }

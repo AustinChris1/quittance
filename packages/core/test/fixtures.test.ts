@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { classify } from "../src/classify.ts";
-import { buildReceipt, canonicalJson, renderText } from "../src/receipt.ts";
+import { buildReceipt, canonicalJson, renderText, verifyReceipt } from "../src/receipt.ts";
 import type { Evidence } from "../src/types.ts";
 import { LABELS } from "../src/labels.ts";
 import { tronToHex } from "../src/sources/tron.ts";
@@ -150,5 +150,15 @@ test("both ends are claimed only when both were read on their own chains", () =>
     if (!v.summary.includes("Both ends proven")) continue;
     assert.ok(fixture.evidence.chain.origin?.verified, `${fixture.case.id} claims both ends without a proven deposit`);
     assert.ok(fixture.evidence.chain.delivery?.verified, `${fixture.case.id} claims both ends without a proven delivery`);
+  }
+});
+
+test("a saved receipt verifies intact, and any edit to it is caught", () => {
+  for (const fixture of fixtures) {
+    const receipt = buildReceipt(fixture.evidence, "2026-11-01T00:00:00.000Z");
+    const copy = JSON.parse(JSON.stringify(receipt));
+    assert.ok(verifyReceipt(copy).intact, `${fixture.case.id} should verify after a JSON round trip`);
+    copy.verdict.label = copy.verdict.label === "DELIVERED" ? "STRANDED" : "DELIVERED";
+    assert.ok(!verifyReceipt(copy).intact, `${fixture.case.id} edit went unnoticed`);
   }
 });

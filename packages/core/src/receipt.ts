@@ -92,6 +92,16 @@ export function buildReceipt(evidence: Evidence, generatedAt = new Date().toISOS
   return { quittance: { version: QUITTANCE_VERSION, generatedAt }, ...body, fingerprint };
 }
 
+/**
+ * Recomputes a saved receipt's fingerprint. A match proves the file is unchanged since it was
+ * made, not that its claims are true: those are checked against the chains, by the links inside.
+ */
+export function verifyReceipt(receipt: Receipt): { intact: boolean; expected: string; recorded: string } {
+  const { input, verdict, evidence, sources } = receipt;
+  const expected = createHash("sha256").update(canonicalJson({ input, verdict, evidence, sources })).digest("hex");
+  return { intact: expected === receipt.fingerprint, expected, recorded: receipt.fingerprint };
+}
+
 const WIDTH = 78;
 const KEY_COL = 19;
 const MAX_TOKEN = 80;

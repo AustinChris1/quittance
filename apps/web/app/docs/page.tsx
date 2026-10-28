@@ -498,6 +498,24 @@ export default function DocsPage() {
               Each figure is reproducible from the repository. <M>quittance coverage --save</M> and <M>quittance study --save</M> write
               dated snapshots to <M>studies/</M>, keeping counts only: no addresses, no amounts per person.
             </P>
+            <details className="mt-5 rounded-2xl border border-line bg-surface p-5">
+              <summary className="cursor-pointer font-semibold">How the coverage was measured</summary>
+              <ul className="mt-4 space-y-2.5 text-sm leading-relaxed text-muted">
+                {[
+                  ["Sample", "The 1,000 most recent SUCCESS swaps the Explorer returned, 11:15 to 12:45 UTC on 28 October."],
+                  ["Denominator", "The 978 whose payout left NEAR for another chain. Payouts that stay inside NEAR Intents are excluded."],
+                  ["Readable", "The destination asset's chain, from the public 1Click token list, is one Quittance reads. NEAR account payouts are not yet counted."],
+                  ["Proven", "100 readable payouts, spread evenly across the window by position, not chosen. Proven means read on its own chain, receipt successful, the quoted asset to the quoted recipient."],
+                  ["Not proven", "Inconclusive, contradicted and unread are each counted apart, and never as proven."],
+                  ["Limits", "One window at one moment, and quoted USD rather than realised value. A sample shows the readers work on real traffic; it does not prove every payout."],
+                ].map(([k, v]) => (
+                  <li key={k} className="grid gap-1 sm:grid-cols-[7.5rem_1fr]">
+                    <span className="font-semibold text-fg">{k}</span>
+                    <span>{v}</span>
+                  </li>
+                ))}
+              </ul>
+            </details>
 
             <H3 id="will-not">What it will not do</H3>
             <ul className="mt-5 grid gap-2.5 sm:grid-cols-2">
@@ -628,7 +646,12 @@ export default function DocsPage() {
             <P>
               <strong className="text-fg">Copy link</strong> gives a URL that re-runs the check for whoever opens it, so they see the chains answer
               for themselves. <strong className="text-fg">Copy for a ticket</strong> gives markdown that pastes cleanly into a support ticket, a
-              GitHub issue or a chat, with the fingerprint at the bottom.
+              GitHub issue or a chat, with the fingerprint and explorer links. <strong className="text-fg">Download JSON</strong> saves
+              the whole receipt, and every proven transfer carries a link to check it on the chain&apos;s own explorer.
+            </P>
+            <P>
+              Anyone can confirm a saved receipt was not altered. <M>quittance receipt receipt.json</M> recomputes the fingerprint and
+              reports <M>INTACT</M> or <M>ALTERED</M>. A match proves integrity, not truth: the links are how the claims are checked.
             </P>
 
             <H3 id="cli">Command line</H3>
@@ -818,7 +841,7 @@ packages/core/src/sources/         1Click, Explorer, NearBlocks, NEAR RPC,
 packages/core/src/coverage.ts      how many real payouts can be proven
 packages/core/src/study.ts         the stuck tail, aggregates only
 apps/web                           the site, the checker, these docs, the API
-apps/cli                           check, replay, verify, rules, study, coverage
+apps/cli                           check, replay, verify, rules, study, coverage, receipt
 apps/sink                          reference webhook receiver
 fixtures/                          seventeen frozen cases with provenance
 studies/                           dated measurement snapshots`}</Code>

@@ -1,0 +1,41 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  core:
+    name: Classifier, receipts and frozen cases
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      # The core has no runtime dependencies, so nothing is installed: Node runs the TypeScript directly.
+      - name: Unit tests
+        run: node --test packages/core/test/fixtures.test.ts
+      - name: Every frozen case keeps its label
+        run: node apps/cli/src/main.ts verify
+      - name: Rules print in order
+        run: node apps/cli/src/main.ts rules
+
+  web:
+    name: Web app typecheck and build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Typecheck
+        run: pnpm -C apps/web exec tsc --noEmit -p .
+      - name: Build
+        run: pnpm -C apps/web build

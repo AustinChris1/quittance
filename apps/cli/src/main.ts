@@ -2,13 +2,14 @@
 import { readdirSync, readFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { join, isAbsolute } from "node:path";
 import { classify } from "../../../packages/core/src/classify.ts";
-import { buildReceipt, renderText } from "../../../packages/core/src/receipt.ts";
+import { buildReceipt, renderText, verifyReceipt, type Receipt } from "../../../packages/core/src/receipt.ts";
 import { gatherEvidence } from "../../../packages/core/src/gather.ts";
 import { postReceipt } from "../../../packages/core/src/webhook.ts";
 import { RULE_IDS } from "../../../packages/core/src/classify.ts";
 import { runStudy, renderStudy } from "../../../packages/core/src/study.ts";
 import { runCoverage, renderCoverage } from "../../../packages/core/src/coverage.ts";
 import type { Evidence } from "../../../packages/core/src/types.ts";
+import { txUrl } from "../../../packages/core/src/sources/explorers.ts";
 
 const ROOT = join(import.meta.dirname, "../../..");
 const FIXTURE_DIR = join(ROOT, "fixtures");
@@ -132,6 +133,27 @@ async function cmdReplay(args: Args): Promise<void> {
   await emit(fixture.evidence, args);
 }
 
+function cmdReceipt(args: Args): void {
+  const file = args.positional[0];
+  if (!file) {
+    console.error("Usage: quittance receipt <receipt.json>, a receipt saved from the checker or printed with --json.");
+    process.exitCode = 1;
+    return;
+  }
+  const receipt = JSON.parse(readFileSync(isAbsolute(file) ? file : join(process.cwd(), file), "utf8")) as Receipt;
+  const result = verifyReceipt(receipt);
+  console.log(`label        ${receipt.verdict.label}`);
+  console.log(`recorded     ${result.recorded}`);
+  console.log(`recomputed   ${result.expected}`);
+  console.log(result.intact ? "INTACT       the evidence and verdict are unchanged since the receipt was made" : "ALTERED      the evidence or verdict was changed after the receipt was made");
+  for (const p of [receipt.evidence.origin, receipt.evidence.delivery]) {
+    const url = p ? (p.explorerUrl ?? txUrl(p.chain, p.tx)) : undefined;
+    if (url) console.log(`check        ${url}`);
+  }
+  console.log("\nA matching fingerprint proves integrity, not truth. Open the links to check the chains yourself.");
+  if (!result.intact) process.exitCode = 2;
+}
+
 function cmdCases(): void {
   for (const fixture of loadFixtures()) {
     console.log(`${fixture.case.id.padEnd(41)} ${fixture.case.expectedLabel.padEnd(19)} ${fixture.case.title}`);
@@ -224,6 +246,7 @@ function cmdHelp(): void {
   quittance cases
   quittance study [--save]
   quittance coverage [--check <n>] [--save]
+  quittance receipt <receipt.json>
   quittance verify
   quittance rules
 
@@ -255,6 +278,9 @@ async function main(): Promise<void> {
       break;
     case "study":
       await cmdStudy(args);
+      break;
+    case "receipt":
+      cmdReceipt(args);
       break;
     case "coverage":
       await cmdCoverage(args);

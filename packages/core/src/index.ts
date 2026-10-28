@@ -37,5 +37,6 @@ export { verifySolanaTransfer, SOLANA_RPCS } from "./sources/solana.ts";
 export { proveTransfer, canProve, type TransferCheck } from "./sources/transfer.ts";
 export { loadTokens, resolveToken, chainName, CHAIN_NAMES, type TokenInfo } from "./sources/tokens.ts";
 export { identifiesSwap, walletRole } from "./sources/explorer.ts";
+export { txUrl } from "./sources/explorers.ts";
 export { postReceipt, type WebhookResult } from "./webhook.ts";
 export { runStudy, renderStudy, type Study, type Cohort } from "./study.ts";

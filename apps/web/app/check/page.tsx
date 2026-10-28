@@ -11,6 +11,7 @@ import {
   CircleHelp,
   Copy,
   DoorOpen,
+  Download,
   EyeOff,
   FileText,
   Loader2,
@@ -155,6 +156,17 @@ export default function CheckPage() {
     }
   }
 
+  /** Saves the full receipt, fingerprint included, so it can be archived or attached anywhere. */
+  function downloadJson(r: Receipt) {
+    const blob = new Blob([JSON.stringify(r, null, 2) + "\n"], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `quittance-receipt-${r.fingerprint.slice(0, 12)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   async function copyText(text: string, which: "link" | "markdown") {
     try {
       await navigator.clipboard.writeText(text);
@@ -178,10 +190,10 @@ export default function CheckPage() {
       r.input.nearTxHash ? `- NEAR transaction: \`${r.input.nearTxHash}\`` : null,
       `- Status: ${r.evidence.status ?? "not read"}`,
       r.evidence.origin?.verified
-        ? `- Deposit proven on ${r.evidence.origin.chain}: ${r.evidence.origin.deliveredFormatted} ${r.evidence.origin.symbol ?? ""}, block ${r.evidence.origin.blockNumber}`
+        ? `- Deposit proven on ${r.evidence.origin.chain}: ${r.evidence.origin.deliveredFormatted} ${r.evidence.origin.symbol ?? ""}, block ${r.evidence.origin.blockNumber}${r.evidence.origin.explorerUrl ? ` ([explorer](${r.evidence.origin.explorerUrl}))` : ""}`
         : null,
       d?.verified
-        ? `- Delivery proven on ${d.chain}: ${d.deliveredFormatted} ${d.symbol ?? ""}, block ${d.blockNumber}`
+        ? `- Delivery proven on ${d.chain}: ${d.deliveredFormatted} ${d.symbol ?? ""}, block ${d.blockNumber}${d.explorerUrl ? ` ([explorer](${d.explorerUrl}))` : ""}`
         : null,
       "",
       "**What was observed**",
@@ -365,7 +377,15 @@ export default function CheckPage() {
                   {result.receipt.verdict.label.replace(/_/g, " ")}
                 </span>
                 <span className="text-sm text-faint">read as {result.inputKind}</span>
-                <span className="ml-auto flex gap-2">
+                <span className="ml-auto flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => downloadJson(result.receipt)}
+                    className="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2 text-sm transition-colors hover:border-fg"
+                  >
+                    <Download size={14} />
+                    Download JSON
+                  </button>
                   <button
                     type="button"
                     onClick={() => void copyText(asMarkdown(result.receipt), "markdown")}

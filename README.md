@@ -1,5 +1,7 @@
 # Quittance
 
+[![ci](https://github.com/AustinChris1/quittance/actions/workflows/ci.yml/badge.svg)](https://github.com/AustinChris1/quittance/actions/workflows/ci.yml)
+
 A receipt for money that crossed chains.
 
 Paste a transaction hash from any chain a NEAR Intents swap touched, the deposit address its quote
@@ -62,6 +64,23 @@ Measured on 2026-10-28 over the 1,000 most recent successful swaps, with
 The inconclusive one is a native coin paid inside a contract call, which public endpoints cannot
 show without a trace. Chains not yet read independently are listed in the snapshot; for them the
 receipt says delivery rests on the operator's record.
+
+How it was measured, so it can be audited:
+
+- **Sample.** The 1,000 most recent `SUCCESS` swaps the Explorer API returned at the time of
+  measurement, newest first. The snapshot records the window: 11:15 to 12:45 UTC on 28 October.
+- **Denominator.** Of those, the 978 whose `recipientType` is `DESTINATION_CHAIN`, meaning the
+  payout left NEAR for another chain. Payouts that stay inside NEAR Intents are excluded.
+- **Readable.** The destination asset's chain, taken from the public 1Click token list, is one
+  Quittance has a reader for. Payouts to NEAR accounts are not yet counted as readable.
+- **Proven.** 100 readable payouts, spread evenly across the window by position rather than chosen.
+  Proven means the destination transaction was read on its own chain, its receipt succeeded, and
+  the quoted asset moved to the quoted recipient. Inconclusive, contradicted and unread are counted
+  separately and never as proven.
+- **Value.** Shares by value use the quoted USD at creation, not a realised amount.
+- **Limits.** One window at one moment. A sample of 100 shows the readers work on real traffic; it
+  does not prove every payout on every chain.
+
 
 ## How big the problem is
 
@@ -195,6 +214,18 @@ node --test packages/core/test/fixtures.test.ts
 node apps/cli/src/main.ts coverage --save
 ```
 
+**Step 7 - check that a saved receipt was not altered.**
+
+```
+node apps/cli/src/main.ts replay 01-reported-stranded-actually-delivered --json > receipt.json
+node apps/cli/src/main.ts receipt receipt.json
+```
+
+Expect `INTACT` and the two explorer links, TRON and Ethereum, to check by hand. Edit any value in
+the file and run it again: it reports `ALTERED`. The checker's **Download JSON** button saves the
+same file. A matching fingerprint proves the receipt is unchanged since it was made, not that its
+claims are true; the links are how anyone checks those against the chains.
+
 ## Where it proves a transfer
 
 | Chain | Read |
@@ -299,7 +330,7 @@ packages/core/src/sources/        1Click status and tokens, Explorer, NearBlocks
 packages/core/src/webhook.ts      the only write, HMAC signed
 packages/core/src/coverage.ts     how many real payouts can be proven
 packages/core/src/study.ts        the stuck tail, aggregates only
-apps/cli/src/main.ts              check, replay, cases, verify, rules, study, coverage
+apps/cli/src/main.ts              check, replay, cases, verify, rules, study, coverage, receipt
 apps/sink/src/main.ts             reference receiver, stands in for an integrator endpoint
 apps/web                          landing page, the checker, the docs and the API
 studies/                          dated measurement snapshots

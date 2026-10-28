@@ -1,8 +1,9 @@
 "use client";
 
 import { motion, useReducedMotion } from "motion/react";
-import { ArrowDown, ArrowRight, CircleDashed, EyeOff, ShieldCheck } from "lucide-react";
+import { ArrowDown, ArrowRight, ArrowUpRight, CircleDashed, Clock, EyeOff, ShieldCheck } from "lucide-react";
 import { ChainLogo, chainFor } from "./chains";
+import { txUrl } from "../../../packages/core/src/sources/explorers.ts";
 
 export type Proof = {
   verified: boolean;
@@ -14,7 +15,25 @@ export type Proof = {
   blockTimeIso?: string;
   inconclusive?: boolean;
   reason?: string;
+  explorerUrl?: string;
 };
+
+/** Days and hours between the two public ends, or null when either time is missing. */
+function elapsed(from?: string, to?: string): string | null {
+  if (!from || !to) return null;
+  const ms = new Date(to).getTime() - new Date(from).getTime();
+  if (!Number.isFinite(ms) || ms < 0) return null;
+  const mins = Math.round(ms / 60_000);
+  if (mins >= 1440) {
+    // Past a day, the nearest hour is precise enough: 15 days 18 h 50 min reads as 15 days 19 h.
+    const hours = Math.round(mins / 60);
+    const d = Math.floor(hours / 24);
+    return `${d} day${d === 1 ? "" : "s"} ${hours % 24} h`;
+  }
+  const h = Math.floor(mins / 60);
+  if (h > 0) return `${h} h ${mins % 60} min`;
+  return mins <= 1 ? "under a minute" : `${mins} min`;
+}
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -30,6 +49,8 @@ function End({ title, proof, fallback, delay }: { title: string; proof?: Proof; 
   const reduced = useReducedMotion();
   const logo = chainFor(proof?.chain ?? fallback);
   const proven = proof?.verified === true;
+  // The link lets anyone confirm the proof on the chain's own explorer.
+  const link = proof ? (proof.explorerUrl ?? txUrl(proof.chain, proof.tx)) : undefined;
   const state = proven
     ? `Proven on ${proof!.chain}`
     : proof?.inconclusive
@@ -65,6 +86,17 @@ function End({ title, proof, fallback, delay }: { title: string; proof?: Proof; 
           block {proof.blockNumber.toLocaleString("en-US")}
           {proof.blockTimeIso ? ` · ${proof.blockTimeIso.slice(0, 16).replace("T", " ")} UTC` : ""}
         </p>
+      ) : null}
+      {link ? (
+        <a
+          href={link}
+          target="_blank"
+          rel="noreferrer"
+          className={`mt-3 inline-flex items-center gap-1 self-start text-sm font-semibold underline decoration-1 underline-offset-4 hover:decoration-2 ${proven ? "" : "text-mint-ink"}`}
+        >
+          Check it yourself
+          <ArrowUpRight size={14} />
+        </a>
       ) : null}
     </motion.div>
   );
@@ -102,6 +134,7 @@ export function TwoEnds({
   privateMiddle: boolean;
 }) {
   const reduced = useReducedMotion();
+  const span = elapsed(origin?.blockTimeIso, delivery?.verified ? delivery.blockTimeIso : undefined);
   return (
     <div className="mt-8 grid gap-3 md:grid-cols-[1fr_auto_1fr_auto_1fr] md:items-stretch">
       <End title="Money in" proof={origin} delay={0.1} />
@@ -126,6 +159,12 @@ export function TwoEnds({
             ? "Since 27 October the exchange settles where no public record reaches. Only the two ends can be proven."
             : "Settled on NEAR Intents between the two public ends."}
         </p>
+        {span ? (
+          <p className="mt-auto inline-flex items-center gap-1.5 pt-4 font-[family-name:var(--font-mono)] text-xs text-faint">
+            <Clock size={13} />
+            {span} from deposit to payout
+          </p>
+        ) : null}
       </motion.div>
       <Connector delay={0.45} />
       <End title="Money out" proof={delivery} fallback={unreadable?.chain} delay={0.5} />

@@ -88,6 +88,8 @@ export type DeliveryProof = {
   /** Read from the token contract, so quoted and delivered amounts compare in the same units. */
   decimals?: number;
   symbol?: string;
+  /** A public block explorer page for the transaction, so the proof can be checked by hand. */
+  explorerUrl?: string;
   recipientMatched?: boolean;
   /** The chain answered but cannot show this kind of transfer, so silence is not a contradiction. */
   inconclusive?: boolean;
