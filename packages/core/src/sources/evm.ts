@@ -130,11 +130,25 @@ export async function verifyEvmTransfer(params: {
 
   if (!params.contract) {
     // Native coin: the value rides on the transaction itself.
-    const tx = await rpc<Tx>(url, "eth_getTransactionByHash", [params.txHash], `${label}.tx`);
-    sources.push(tx.source);
-    const to = tx.ok ? tx.data.result?.to?.toLowerCase() : undefined;
-    const value = tx.ok && tx.data.result?.value ? BigInt(tx.data.result.value) : 0n;
-    const viaContract = (tx.ok ? tx.data.result?.input ?? "0x" : "0x").length > 2;
+    // A failed read is not a contradiction, so every endpoint is tried before giving up.
+    let body: Tx | undefined;
+    for (const candidate of [url, ...candidates.filter((c) => c !== url)]) {
+      const attempt = await rpc<Tx>(candidate, "eth_getTransactionByHash", [params.txHash], `${label}.tx`);
+      sources.push(attempt.source);
+      if (attempt.ok && attempt.data.result) {
+        body = attempt.data.result;
+        break;
+      }
+    }
+    if (!body) {
+      return {
+        proof: { ...base, blockNumber, blockTimeIso, reason: `The transaction body could not be read from any endpoint on ${chain.name}.` },
+        sources,
+      };
+    }
+    const to = body.to?.toLowerCase();
+    const value = body.value ? BigInt(body.value) : 0n;
+    const viaContract = (body.input ?? "0x").length > 2;
     const decimals = params.decimals ?? 18;
     if (to && value > 0n && (!recipient || to === recipient)) {
       return {

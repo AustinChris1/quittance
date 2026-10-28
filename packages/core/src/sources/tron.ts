@@ -110,10 +110,24 @@ export async function verifyTronTransfer(params: {
   }
 
   // Native TRX: the amount and receiver sit on the transaction's TransferContract.
-  const txRes = await post<Tx>(api, "/wallet/gettransactionbyid", hash, "tron.tx");
-  sources.push(txRes.source);
-  const contract = txRes.ok ? txRes.data.raw_data?.contract?.[0] : undefined;
-  const ok = txRes.ok && txRes.data.ret?.[0]?.contractRet === "SUCCESS";
+  // A failed read is not a contradiction, so every endpoint is tried before giving up.
+  let tx: Tx | undefined;
+  for (const candidate of [api, ...TRON_APIS.filter((a) => a !== api)]) {
+    const res = await post<Tx>(candidate, "/wallet/gettransactionbyid", hash, "tron.tx");
+    sources.push(res.source);
+    if (res.ok && res.data?.raw_data) {
+      tx = res.data;
+      break;
+    }
+  }
+  if (!tx) {
+    return {
+      proof: { ...base, blockNumber, blockTimeIso, reason: "The transaction body could not be read from any TRON endpoint." },
+      sources,
+    };
+  }
+  const contract = tx.raw_data?.contract?.[0];
+  const ok = tx.ret?.[0]?.contractRet === "SUCCESS";
   const value = contract?.parameter?.value;
   const settled: DeliveryProof = { ...base, receiptStatus: ok ? "success" : "failed", blockNumber, blockTimeIso };
   if (contract?.type === "TransferContract" && value?.amount && (!recipientHex || value.to_address?.toLowerCase() === recipientHex)) {

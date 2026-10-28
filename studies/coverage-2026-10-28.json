@@ -1,0 +1,60 @@
+{
+  "at": "2026-10-28T12:35:45.253Z",
+  "window": {
+    "from": "2026-10-28T11:02:18.347Z",
+    "to": "2026-10-28T12:33:57.762Z"
+  },
+  "sampled": 1000,
+  "externalPayouts": 979,
+  "readable": {
+    "count": 794,
+    "share": 81.1,
+    "usdShare": 80.8
+  },
+  "erc20Only": {
+    "count": 251,
+    "share": 25.6,
+    "usdShare": 36.7
+  },
+  "shieldedZcash": 7,
+  "notYetRead": {
+    "near": 75,
+    "ton": 26,
+    "sui": 8,
+    "ltc": 14,
+    "xrp": 17,
+    "btc": 17,
+    "zec": 8,
+    "stellar": 1,
+    "cardano": 1,
+    "xlayer": 3,
+    "aptos": 1,
+    "dash": 1,
+    "doge": 1,
+    "plasma": 1,
+    "bch": 2,
+    "monad": 1,
+    "starknet": 1
+  },
+  "proven": {
+    "checked": 100,
+    "verified": 99,
+    "inconclusive": 1,
+    "contradicted": 0,
+    "unread": 0
+  },
+  "provenByChain": {
+    "base": 16,
+    "sol": 22,
+    "tron": 29,
+    "eth": 22,
+    "arb": 6,
+    "hood": 2,
+    "pol": 2
+  },
+  "notes": [
+    "Readable means the destination chain is one Quittance reads. Proven means the payout was read on that chain and matched the quoted recipient.",
+    "USD is the quoted value at creation, not a realised amount.",
+    "Counts only. No addresses, hashes or per-swap amounts are retained."
+  ]
+}

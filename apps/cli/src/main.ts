@@ -7,6 +7,7 @@ import { gatherEvidence } from "../../../packages/core/src/gather.ts";
 import { postReceipt } from "../../../packages/core/src/webhook.ts";
 import { RULE_IDS } from "../../../packages/core/src/classify.ts";
 import { runStudy, renderStudy } from "../../../packages/core/src/study.ts";
+import { runCoverage, renderCoverage } from "../../../packages/core/src/coverage.ts";
 import type { Evidence } from "../../../packages/core/src/types.ts";
 
 const ROOT = join(import.meta.dirname, "../../..");
@@ -188,6 +189,25 @@ async function cmdStudy(args: Args): Promise<void> {
   }
 }
 
+async function cmdCoverage(args: Args): Promise<void> {
+  const token = flagString(args.flags, "token") ?? process.env.QUITTANCE_PARTNER_JWT;
+  if (!token) {
+    console.error("Coverage reads recent swaps from the Explorer, which needs a partner JWT in QUITTANCE_PARTNER_JWT.");
+    process.exitCode = 1;
+    return;
+  }
+  const checkFlag = flagString(args.flags, "check");
+  const coverage = await runCoverage({ token, check: checkFlag ? Number(checkFlag) : undefined });
+  console.log(renderCoverage(coverage));
+  if (args.flags.save) {
+    const dir = join(ROOT, "studies");
+    mkdirSync(dir, { recursive: true });
+    const path = join(dir, `coverage-${coverage.at.slice(0, 10)}.json`);
+    writeFileSync(path, JSON.stringify(coverage, null, 2) + "\n");
+    console.log("\nsaved " + path);
+  }
+}
+
 function cmdRules(): void {
   console.log("Rules are evaluated in this order and the first match wins.\n");
   RULE_IDS.forEach((id, i) => console.log(`${String(i + 1).padStart(2)}. ${id}`));
@@ -199,9 +219,11 @@ function cmdHelp(): void {
 
   quittance check --deposit <address> [--memo <memo>] [--key <api key>]
   quittance check --tx <near tx hash>
+  quittance check --search <any tx hash, deposit address or wallet>
   quittance replay <case-id>
   quittance cases
   quittance study [--save]
+  quittance coverage [--check <n>] [--save]
   quittance verify
   quittance rules
 
@@ -233,6 +255,9 @@ async function main(): Promise<void> {
       break;
     case "study":
       await cmdStudy(args);
+      break;
+    case "coverage":
+      await cmdCoverage(args);
       break;
     case "verify":
       cmdVerify();
