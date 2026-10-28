@@ -1,5 +1,5 @@
 import type { Evidence } from "./types.ts";
-import { CONFIDENTIAL_TREASURY } from "./types.ts";
+import { CONFIDENTIAL_TREASURY, type DeliveryProof } from "./types.ts";
 import { LABEL_HEADLINE, type Verdict, type Label } from "./labels.ts";
 import { formatUnits } from "./sources/http.ts";
 
@@ -15,6 +15,26 @@ function group(amount: string): string {
   const grouped = whole!.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   const trimmed = frac?.replace(/0+$/, "");
   return trimmed ? `${grouped}.${trimmed}` : grouped;
+}
+
+// docs.near-intents.org/changelog/overview, entry of 27 October 2026.
+const CONFIDENTIAL_ONLY_FROM = "2026-10-27T00:00:00.000Z";
+const PRIVATE_MIDDLE_LIMIT =
+  "NEAR's changelog says 1Click swaps roll out as confidential only from 27 October 2026, settling on the NEAR Private Shard. On such a swap the exchange itself has no public record. Only its two ends do, and those are what this receipt reads.";
+
+/** The earliest public timestamp this swap left, used to place it before or after a change. */
+function swapTime(e: Evidence): string | undefined {
+  return e.chain.origin?.blockTimeIso ?? e.chain.nearTxTimeIso ?? e.chain.delivery?.blockTimeIso;
+}
+
+/** One line for a transfer read on its own chain. */
+function proofLine(proof: DeliveryProof, to: string): string {
+  const where = proof.blockNumber ? ` in block ${proof.blockNumber}` : "";
+  const when = proof.blockTimeIso ? ` at ${proof.blockTimeIso}` : "";
+  const amount = proof.deliveredFormatted
+    ? `${group(proof.deliveredFormatted)}${proof.symbol ? " " + proof.symbol : ""}`
+    : "the expected token";
+  return `Read independently from ${proof.chain}: ${amount} reached ${to}${where}${when}, receipt status ${proof.receiptStatus ?? "unknown"}.`;
 }
 
 /** Names the public indexes that were asked and what they answered, and nothing more. */
@@ -45,7 +65,7 @@ function indexBasis(e: Evidence): string[] {
 /** True when the destination chain answered and its answer does not show the delivery. */
 function contradicted(e: Evidence): boolean {
   const proof = e.chain.delivery;
-  return proof !== undefined && !proof.verified && proof.receiptStatus !== undefined;
+  return proof !== undefined && !proof.verified && proof.receiptStatus !== undefined && !proof.inconclusive;
 }
 
 /** Compares what arrived on chain with what the quote promised, in the token's own units. */
@@ -56,12 +76,13 @@ function reconcile(e: Evidence): { line: string; belowMinimum: boolean } | undef
   const quoted = BigInt(e.status.quotedAmountOut);
   if (quoted === 0n) return undefined;
   const delivered = BigInt(proof.deliveredRaw);
-  const fmt = (raw: bigint) => group(formatUnits(raw.toString(), proof.decimals!));
+  const unit = proof.symbol ? ` ${proof.symbol}` : "";
+  const fmt = (raw: bigint) => group(formatUnits(raw.toString(), proof.decimals!)) + unit;
   const gap = quoted - delivered;
   const pct = (Math.abs(Number((gap * 1_000_000n) / quoted)) / 10_000).toFixed(2);
   const min = e.status.minAmountOut ? BigInt(e.status.minAmountOut) : undefined;
   const belowMinimum = min !== undefined && delivered < min;
-  const side = gap >= 0n ? `${pct}% under the quote` : `${pct}% over the quote`;
+  const side = pct === "0.00" ? "matching the quote" : gap >= 0n ? `${pct}% under the quote` : `${pct}% over the quote`;
   const floor =
     min === undefined
       ? "."
@@ -356,20 +377,27 @@ const RULES: Rule[] = [
         basis.push(`A destination transaction is published: ${tx.hash} on ${tx.chain}.`);
       }
       const limits = [ALWAYS_LIMIT];
+      const origin = e.chain.origin;
+      if (origin?.verified) basis.push(proofLine(origin, "the deposit address"));
+      else if (origin?.reason) basis.push(`The deposit could not be confirmed on ${origin.chain}: ${origin.reason}`);
       const proof = e.chain.delivery;
+      const unreadable = e.chain.deliveryUnreadable;
       if (proof?.verified) {
-        const where = proof.blockNumber ? ` in block ${proof.blockNumber}` : "";
-        const when = proof.blockTimeIso ? ` at ${proof.blockTimeIso}` : "";
-        const amount = proof.deliveredFormatted ? group(proof.deliveredFormatted) : "the expected token";
-        basis.push(
-          `Read independently from ${proof.chain}: ${amount} reached the quoted recipient${where}${when}, receipt status ${proof.receiptStatus ?? "unknown"}.`,
-        );
+        basis.push(proofLine(proof, "the quoted recipient"));
       } else if (proof?.reason) {
-        basis.push(`The destination receipt could not be read on ${proof.chain}: ${proof.reason}`);
-        limits.push("Delivery rests on the operator record alone until the destination chain can be read.");
+        basis.push(
+          proof.inconclusive
+            ? `The destination receipt was read on ${proof.chain} but cannot show this payout: ${proof.reason}`
+            : `The destination receipt could not be read on ${proof.chain}: ${proof.reason}`,
+        );
+        limits.push("Delivery rests on the operator record alone until the destination chain can show it.");
+      } else if (unreadable) {
+        limits.push(`${unreadable.reason} Delivery rests on the operator record alone.`);
       } else {
         limits.push("The destination receipt was not read, so delivery rests on the operator record alone.");
       }
+      const at = swapTime(e);
+      if (at && at >= CONFIDENTIAL_ONLY_FROM) limits.push(PRIVATE_MIDDLE_LIMIT);
       const amounts = reconcile(e);
       if (amounts) basis.push(amounts.line);
       else limits.push("The amount received was not reconciled against the quoted amount.");
@@ -426,18 +454,28 @@ function summarize(label: Label, e: Evidence): string {
   const proof = e.chain.delivery;
   switch (label) {
     case "DELIVERED": {
+      const origin = e.chain.origin;
       if (proof?.verified) {
-        const started = e.chain.deposits[0]?.blockTimestampIso ?? e.chain.nearTxTimeIso;
+        const started = origin?.blockTimeIso ?? e.chain.deposits[0]?.blockTimestampIso ?? e.chain.nearTxTimeIso;
         const days = daysBetween(started, proof.blockTimeIso);
         // Rounded to whole days, so say so: 15 days 19 hours reads as about 16.
         const when = days === null ? "" : days === 0 ? " the same day" : ` about ${days} day${days === 1 ? "" : "s"} after the deposit`;
         if (reconcile(e)?.belowMinimum) {
           return `Delivered on ${titleCase(proof.chain)}${when}, but less arrived than the quote guaranteed.`;
         }
+        if (origin?.verified) {
+          return `Delivered on ${titleCase(proof.chain)}${when}. Both ends proven on their own chains: the deposit on ${titleCase(origin.chain)}, the delivery on ${titleCase(proof.chain)}.`;
+        }
         return `Delivered on ${titleCase(proof.chain)}${when}, and proven on that chain rather than taken on trust.`;
+      }
+      if (proof?.inconclusive) {
+        return `The operator reports this delivered. The payout on ${titleCase(proof.chain)} was made inside a contract call, which public endpoints cannot show.`;
       }
       if (proof) {
         return `The operator reports this delivered. ${titleCase(proof.chain)} could not be reached to confirm it.`;
+      }
+      if (e.chain.deliveryUnreadable) {
+        return `The operator reports this delivered. ${e.chain.deliveryUnreadable.reason}`;
       }
       return "The operator reports this delivered. The destination chain was not checked independently.";
     }
@@ -478,15 +516,18 @@ export function classify(evidence: Evidence): Classification {
     verdict: {
       label: "UNDETERMINED",
       headline: LABEL_HEADLINE.UNDETERMINED,
-      summary: summarize("UNDETERMINED", evidence),
-      rule: "fallback/no-rule-applied",
+      summary: evidence.candidates
+        ? `This is a wallet, not a swap. It appears in ${evidence.candidates.length} swap${evidence.candidates.length === 1 ? "" : "s"}.`
+        : summarize("UNDETERMINED", evidence),
+      rule: evidence.candidates ? "lookup/wallet-not-swap" : "fallback/no-rule-applied",
       basis: evidence.notes.length > 0 ? [...evidence.notes] : ["No rule matched the evidence gathered."],
       limits: [
         ...baseLimits(evidence),
         "An unclassified deposit is a gap in these rules, not proof that the swap is healthy.",
       ],
-      next:
-        !evidence.status.available && !evidence.chain.checked
+      next: evidence.candidates
+        ? "Pick the swap you mean from the list. Quittance checks one swap at a time, by its deposit address or any of its transactions."
+        : !evidence.status.available && !evidence.chain.checked
           ? "No public index has a record of this. The usual reasons are a quote that expired before any deposit, a mistyped address, or a confidential route, which public indexers do not show. If the money left a NEAR account, paste that NEAR transaction hash instead; Quittance can read a shield from it."
           : "Confirm the deposit address is the one the quote issued, and supply the NEAR transaction hash if you have it. If the evidence still does not match a known pattern, file it as a new case.",
     },

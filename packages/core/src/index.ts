@@ -31,5 +31,11 @@ export {
   EVM_RPCS,
   type DeliveryProof as EvmDeliveryProof,
 } from "./sources/evm.ts";
+export { verifyEvmTransfer } from "./sources/evm.ts";
+export { verifyTronTransfer, tronToHex, TRON_APIS } from "./sources/tron.ts";
+export { verifySolanaTransfer, SOLANA_RPCS } from "./sources/solana.ts";
+export { proveTransfer, canProve, type TransferCheck } from "./sources/transfer.ts";
+export { loadTokens, resolveToken, chainName, CHAIN_NAMES, type TokenInfo } from "./sources/tokens.ts";
+export { identifiesSwap, walletRole } from "./sources/explorer.ts";
 export { postReceipt, type WebhookResult } from "./webhook.ts";
 export { runStudy, renderStudy, type Study, type Cohort } from "./study.ts";

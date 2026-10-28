@@ -131,6 +131,33 @@ export async function searchExplorer(params: {
   return { records, sources: [res.source], needsToken: false };
 }
 
+function same(a: string | undefined, b: string): boolean {
+  if (!a) return false;
+  return a.startsWith("0x") ? a.toLowerCase() === b.toLowerCase() : a === b;
+}
+
+/** True when the term identifies this swap itself: its deposit address or one of its transactions. */
+export function identifiesSwap(record: ExplorerRecord, term: string): boolean {
+  const raw = record.raw;
+  const strings = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
+  return (
+    same(record.depositAddress, term) ||
+    record.originChainTxHashes.some((t) => same(t.hash, term)) ||
+    record.destinationChainTxHashes.some((t) => same(t.hash, term)) ||
+    strings(raw.nearTxHashes).some((h) => same(h, term)) ||
+    strings(raw.intentHashes).some((h) => same(h, term))
+  );
+}
+
+/** How a wallet relates to a swap it did not identify: it received, it sent, or it was the refund address. */
+export function walletRole(record: ExplorerRecord, term: string): "recipient" | "sender" | "refund" | undefined {
+  if (same(record.recipient, term)) return "recipient";
+  const senders = Array.isArray(record.raw.senders) ? record.raw.senders : [];
+  if (senders.some((s) => typeof s === "string" && same(s, term))) return "sender";
+  if (same(record.refundTo, term)) return "refund";
+  return undefined;
+}
+
 /** Builds status evidence from an explorer record, used when the status endpoint has no answer. */
 export function statusFromExplorer(record: ExplorerRecord): StatusEvidence {
   const status = oneOf(ONECLICK_STATUSES, record.status);

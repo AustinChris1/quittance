@@ -141,9 +141,11 @@ function cmdVerify(): void {
   const fixtures = loadFixtures();
   const durations: number[] = [];
   let correct = 0;
+  // Sized to the longest case name, so the columns hold as cases are added.
+  const w = Math.max(...fixtures.map((f) => f.case.id.length)) + 2;
 
-  console.log(`${" case".padEnd(42)}${"expected".padEnd(20)}${"actual".padEnd(20)}ms`);
-  console.log("-".repeat(86));
+  console.log(`${" case".padEnd(w + 1)}${"expected".padEnd(20)}${"actual".padEnd(20)}ms`);
+  console.log("-".repeat(w + 45));
   for (const fixture of fixtures) {
     const started = performance.now();
     const { verdict } = classify(fixture.evidence);
@@ -153,13 +155,13 @@ function cmdVerify(): void {
     const ok = verdict.label === fixture.case.expectedLabel;
     if (ok) correct += 1;
     console.log(
-      `${ok ? " " : "x"}${fixture.case.id.padEnd(41)}${fixture.case.expectedLabel.padEnd(20)}${verdict.label.padEnd(20)}${ms.toFixed(1)}`,
+      `${ok ? " " : "x"}${fixture.case.id.padEnd(w)}${fixture.case.expectedLabel.padEnd(20)}${verdict.label.padEnd(20)}${ms.toFixed(1)}`,
     );
   }
 
   const sorted = [...durations].sort((a, b) => a - b);
   const median = sorted[Math.floor(sorted.length / 2)] ?? 0;
-  console.log("-".repeat(86));
+  console.log("-".repeat(w + 45));
   console.log(`labels correct        ${correct} of ${fixtures.length}`);
   console.log(`median classify time  ${median.toFixed(1)} ms (classification only, no network)`);
   if (correct !== fixtures.length) process.exitCode = 1;

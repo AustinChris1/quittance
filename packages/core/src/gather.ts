@@ -1,9 +1,9 @@
-import type { ChainEvidence, Evidence, SourceRef } from "./types.ts";
+import type { ChainEvidence, Evidence, SourceRef, SwapCandidate } from "./types.ts";
 import { readOneClickStatus } from "./sources/oneclick.ts";
 import { readNearTx } from "./sources/nearblocks.ts";
 import { ftBalanceOf, readBtcConnectorConfig } from "./sources/near.ts";
-import { searchExplorer, statusFromExplorer, type ExplorerRecord } from "./sources/explorer.ts";
-import { parseEvmAsset, verifyEvmDelivery } from "./sources/evm.ts";
+import { identifiesSwap, searchExplorer, statusFromExplorer, walletRole, type ExplorerRecord } from "./sources/explorer.ts";
+import { proveTransfer } from "./sources/transfer.ts";
 
 export type GatherOptions = {
   depositAddress?: string;
@@ -60,7 +60,34 @@ export async function gatherEvidence(options: GatherOptions): Promise<Evidence> 
     });
     sources.push(...found.sources);
     if (found.note) notes.push(found.note);
-    const match = found.records.find((r) => r.depositAddress);
+    // Only a record the term identifies is this swap. A wallet matches many, and picking one would be a guess.
+    const match = found.records.find((r) => r.depositAddress && identifiesSwap(r, searchTerm));
+    const related = found.records.filter((r) => r.depositAddress && r !== match);
+    if (!match && related.length > 0) {
+      const candidates: SwapCandidate[] = related.map((r) => ({
+        depositAddress: r.depositAddress!,
+        depositMemo: r.depositMemo,
+        role: walletRole(r, searchTerm) ?? "related",
+        status: r.status,
+        createdAt: typeof r.raw.createdAt === "string" ? r.raw.createdAt : undefined,
+        originAsset: typeof r.raw.originAsset === "string" ? r.raw.originAsset : undefined,
+        destinationAsset: typeof r.raw.destinationAsset === "string" ? r.raw.destinationAsset : undefined,
+        amountInFormatted: r.amountInFormatted,
+        amountOutFormatted: r.amountOutFormatted,
+        amountInUsd: typeof r.raw.amountInUsd === "string" ? r.raw.amountInUsd : undefined,
+      }));
+      notes.push(`${searchTerm} is not a swap but an address that appears in ${candidates.length} swap${candidates.length === 1 ? "" : "s"}. Pick one to check it.`);
+      return {
+        input: { search: searchTerm },
+        candidates,
+        fetchedAt,
+        mode: options.apiKey ? "authenticated" : "unauthenticated",
+        status: { available: false, reason: "The input names a wallet, not a swap, so no single swap was read." },
+        chain: { deposits: [], checked: false },
+        sources,
+        notes,
+      };
+    }
     if (match) {
       depositAddress = match.depositAddress;
       memo = memo ?? match.depositMemo;
@@ -131,7 +158,8 @@ export async function gatherEvidence(options: GatherOptions): Promise<Evidence> 
     notes.push("No NEAR transaction hash was available, so chain evidence could not be gathered.");
   }
 
-  if (status.available) {
+  // A NEAR-side recipient can be balance-checked; an external one is checked on its own chain below.
+  if (status.available && status.recipientType !== "DESTINATION_CHAIN") {
     const token = parseNep141(status.destinationAsset);
     const recipient = status.recipient;
     if (token && recipient && !recipient.startsWith("0x")) {
@@ -143,24 +171,49 @@ export async function gatherEvidence(options: GatherOptions): Promise<Evidence> 
     }
   }
 
-  // A reported SUCCESS is not evidence. Read the destination receipt and check it ourselves.
+  // Money in: read the deposit on the chain it was sent on, against the deposit address.
+  const originTx = status.available ? status.originChainTxHashes[0]?.hash : undefined;
+  if (status.available && originTx && depositAddress && status.depositType !== "INTENTS") {
+    const check = await proveTransfer({ assetId: status.originAsset, txHash: originTx, to: depositAddress });
+    sources.push(...check.sources);
+    if (check.proof) {
+      chain.origin = check.proof;
+      notes.push(
+        check.proof.verified
+          ? `Deposit confirmed on ${check.proof.chain}: ${check.proof.deliveredFormatted} reached the deposit address.`
+          : `Deposit could not be confirmed on ${check.proof.chain}: ${check.proof.reason ?? "no matching transfer."}`,
+      );
+    } else if (check.unsupported) {
+      notes.push(`Quittance does not read ${check.unsupported} yet, so the deposit rests on the operator record.`);
+    }
+  }
+
+  // Money out. A reported SUCCESS is not evidence: read the destination receipt and check it ourselves.
   if (status.available && status.destinationChainTxHashes.length > 0) {
-    const asset = parseEvmAsset(status.destinationAsset);
     const txHash = status.destinationChainTxHashes[0]!.hash;
-    if (asset && /^0x[0-9a-fA-F]{64}$/.test(txHash)) {
-      const { proof, sources: proofSources } = await verifyEvmDelivery({
-        txHash,
-        asset,
-        recipient: status.recipient,
-      });
-      sources.push(...proofSources);
-      chain.delivery = proof;
-      if (proof.verified && proof.deliveredFormatted) {
+    const recipient = status.recipient;
+    if (status.destinationAsset === "nep141:zec.omft.near" && recipient && !recipient.startsWith("t")) {
+      // Unified and sapling addresses are shielded by design; only transparent t-addresses are public.
+      chain.deliveryUnreadable = {
+        chain: "Zcash",
+        reason: "The recipient is a shielded Zcash address, so no public record can show the payout.",
+      };
+    } else {
+      const check = await proveTransfer({ assetId: status.destinationAsset, txHash, to: recipient });
+      sources.push(...check.sources);
+      if (check.proof) {
+        chain.delivery = check.proof;
+        const p = check.proof;
         notes.push(
-          `Delivery confirmed on ${proof.chain}: ${proof.deliveredFormatted} reached the quoted recipient in block ${proof.blockNumber ?? "unknown"}${proof.blockTimeIso ? " at " + proof.blockTimeIso : ""}.`,
+          p.verified
+            ? `Delivery confirmed on ${p.chain}: ${p.deliveredFormatted} reached the quoted recipient in block ${p.blockNumber ?? "unknown"}${p.blockTimeIso ? " at " + p.blockTimeIso : ""}.`
+            : `Delivery could not be confirmed on ${p.chain}: ${p.reason ?? "no matching transfer."}`,
         );
-      } else if (proof.reason) {
-        notes.push(`Delivery could not be confirmed on ${proof.chain}: ${proof.reason}`);
+      } else if (check.unsupported) {
+        chain.deliveryUnreadable = {
+          chain: check.unsupported,
+          reason: `Quittance does not read ${check.unsupported} yet.`,
+        };
       }
     }
   }
@@ -175,7 +228,7 @@ export async function gatherEvidence(options: GatherOptions): Promise<Evidence> 
   }
 
   return {
-    input: { depositAddress, memo, nearTxHash },
+    input: { depositAddress, memo, nearTxHash, search: options.search },
     fetchedAt,
     mode: options.apiKey ? "authenticated" : "unauthenticated",
     status,

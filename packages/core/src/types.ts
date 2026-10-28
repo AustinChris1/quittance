@@ -87,7 +87,10 @@ export type DeliveryProof = {
   deliveredFormatted?: string;
   /** Read from the token contract, so quoted and delivered amounts compare in the same units. */
   decimals?: number;
+  symbol?: string;
   recipientMatched?: boolean;
+  /** The chain answered but cannot show this kind of transfer, so silence is not a contradiction. */
+  inconclusive?: boolean;
   reason?: string;
 };
 
@@ -123,6 +126,10 @@ export type ChainEvidence = {
   refundTx?: TxRef;
   /** Read from the destination chain, not taken from the operator record. */
   delivery?: DeliveryProof;
+  /** Read from the origin chain: the deposit reaching the deposit address. */
+  origin?: DeliveryProof;
+  /** Why the destination could not be read, when the chain is one no public record can settle. */
+  deliveryUnreadable?: { chain: string; reason: string };
   /** Set when a deposit landed as a different asset or chain than the quote expected. */
   assetMismatch?: { expected: string; observed: string; chain: string };
   /** Funds still sitting untouched at the deposit address. */
@@ -144,8 +151,24 @@ export type ConnectorEvidence = {
 /** Whether the status call carried a partner key. The endpoint answers either way. */
 export type EvidenceMode = "authenticated" | "unauthenticated";
 
+/** One swap a wallet took part in, for when the input names a wallet rather than a swap. */
+export type SwapCandidate = {
+  depositAddress: string;
+  depositMemo?: string;
+  role: "recipient" | "sender" | "refund" | "related";
+  status?: string;
+  createdAt?: string;
+  originAsset?: string;
+  destinationAsset?: string;
+  amountInFormatted?: string;
+  amountOutFormatted?: string;
+  amountInUsd?: string;
+};
+
 export type Evidence = {
-  input: { depositAddress?: string; memo?: string; nearTxHash?: string };
+  input: { depositAddress?: string; memo?: string; nearTxHash?: string; search?: string };
+  /** Set instead of a resolved swap when the input is a wallet with several swaps. */
+  candidates?: SwapCandidate[];
   fetchedAt: string;
   mode: EvidenceMode;
   status: StatusEvidence;

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import {
   ArrowLeft,
+  ArrowRight,
   CheckCircle2,
   CircleHelp,
   Copy,
@@ -16,13 +17,14 @@ import {
   PackageX,
   RotateCcw,
   Search,
-  ShieldCheck,
+  Wallet,
   Timer,
   type LucideIcon,
 } from "lucide-react";
 import { TallyMark, Wordmark } from "../../components/logo";
 import { ThemeToggle } from "../../components/theme";
-import { ChainLogo, type ChainName } from "../../components/chains";
+import { ChainLogo, chainFor, type ChainName } from "../../components/chains";
+import { TwoEnds, type Proof } from "../../components/two-ends";
 
 type Verdict = {
   label: string;
@@ -44,18 +46,24 @@ type Receipt = {
     correlationId?: string;
     statusUpdatedAt?: string;
     destinationChainTxHashes: string[];
-    delivery?: {
-      verified: boolean;
-      chain: string;
-      deliveredFormatted?: string;
-      blockNumber?: number;
-      blockTimeIso?: string;
-      reason?: string;
-    };
+    delivery?: Proof;
+    origin?: Proof;
+    deliveryUnreadable?: { chain: string; reason: string };
     creditedTo?: { account: string; token: string; amount: string };
   };
   sources: { name: string; url: string; ok: boolean; detail?: string }[];
   fingerprint: string;
+};
+
+type Swap = {
+  depositAddress: string;
+  role: string;
+  status?: string;
+  createdAt?: string;
+  amountInFormatted?: string;
+  amountOutFormatted?: string;
+  origin?: { symbol: string; chain: string };
+  destination?: { symbol: string; chain: string };
 };
 
 type Tone = { Icon: LucideIcon; chip: string; text: string };
@@ -77,6 +85,8 @@ const TONE: Record<string, Tone> = {
 
 const SAMPLE = "8a33DkKfZMWRKbK2pXuQAWVLXSy4AyZF6PfcENvCJgCb";
 const SHIELD_SAMPLE = "3djtQ3pUHv8SGtNKS3CMGice7E7S9oeS4DJzNYyjCUVD";
+// The wallet the 193K was paid to. Pasting it finds the swap the forum calls lost.
+const WALLET_SAMPLE = "0x632F5D32448DE43b8b9cfD063aCfcDac09108bad";
 
 const READS: { label: string; chain: ChainName }[] = [
   { label: "Resolving the hash through the Intents Explorer", chain: "NEAR" },
@@ -84,18 +94,6 @@ const READS: { label: string; chain: ChainName }[] = [
   { label: "Reading the deposit on its origin chain", chain: "Tron" },
   { label: "Proving delivery on the destination chain", chain: "Ethereum" },
 ];
-
-/** Map the receipt's chain names onto the vendored official logos. */
-function chainFor(name?: string): ChainName | null {
-  const n = (name ?? "").toLowerCase();
-  if (n.includes("eth")) return "Ethereum";
-  if (n.includes("base")) return "Base";
-  if (n.includes("sol")) return "Solana";
-  if (n.includes("btc") || n.includes("bitcoin")) return "Bitcoin";
-  if (n.includes("tron")) return "Tron";
-  if (n.includes("near")) return "NEAR";
-  return null;
-}
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
@@ -110,7 +108,7 @@ export default function CheckPage() {
   const [query, setQuery] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<{ receipt: Receipt; inputKind: string } | null>(null);
+  const [result, setResult] = useState<{ receipt: Receipt; inputKind: string; swaps?: Swap[] } | null>(null);
   const [copied, setCopied] = useState<"link" | "markdown" | null>(null);
   const reduced = useReducedMotion();
   const ran = useRef(false);
@@ -130,7 +128,7 @@ export default function CheckPage() {
   async function submit(value: string) {
     const trimmed = value.trim();
     if (trimmed.length < 8) {
-      setError("Paste a deposit address or a transaction hash.");
+      setError("Paste a transaction hash, a deposit address or a wallet address.");
       return;
     }
     setBusy(true);
@@ -146,7 +144,7 @@ export default function CheckPage() {
       if (!res.ok) {
         setError(typeof body.error === "string" ? body.error : "That lookup did not work.");
       } else {
-        setResult({ receipt: body.receipt as Receipt, inputKind: body.inputKind as string });
+        setResult({ receipt: body.receipt as Receipt, inputKind: body.inputKind as string, swaps: body.swaps as Swap[] | undefined });
         window.history.replaceState(null, "", `/check?q=${encodeURIComponent(trimmed)}`);
       }
     } catch {
@@ -178,8 +176,11 @@ export default function CheckPage() {
       r.input.depositAddress ? `- Deposit address: \`${r.input.depositAddress}\`` : null,
       r.input.nearTxHash ? `- NEAR transaction: \`${r.input.nearTxHash}\`` : null,
       `- Status: ${r.evidence.status ?? "not read"}`,
+      r.evidence.origin?.verified
+        ? `- Deposit proven on ${r.evidence.origin.chain}: ${r.evidence.origin.deliveredFormatted} ${r.evidence.origin.symbol ?? ""}, block ${r.evidence.origin.blockNumber}`
+        : null,
       d?.verified
-        ? `- Proven on ${d.chain}: ${d.deliveredFormatted} delivered, block ${d.blockNumber}`
+        ? `- Delivery proven on ${d.chain}: ${d.deliveredFormatted} ${d.symbol ?? ""}, block ${d.blockNumber}`
         : null,
       "",
       "**What was observed**",
@@ -197,8 +198,9 @@ export default function CheckPage() {
   }
 
   const tone = result ? (TONE[result.receipt.verdict.label] ?? TONE.UNDETERMINED!) : null;
-  const delivery = result?.receipt.evidence.delivery;
-  const deliveryChain = chainFor(delivery?.chain);
+  const ev = result?.receipt.evidence;
+  const showEnds = Boolean(ev && (ev.origin || ev.delivery || ev.deliveryUnreadable));
+  const privateMiddle = Boolean(result?.receipt.verdict.limits.some((l) => l.includes("NEAR Private Shard")));
   const ease = [0.16, 1, 0.3, 1] as const;
 
   return (
@@ -222,8 +224,8 @@ export default function CheckPage() {
       <section className="relative mx-auto max-w-5xl px-6 pt-10 pb-28">
         <h1 className="display text-[clamp(2.2rem,6vw,4.4rem)]">What happened to this swap?</h1>
         <p className="mt-5 max-w-xl text-lg text-muted">
-          A transaction hash from either side, or the deposit address the quote issued. Nothing is
-          signed and nothing moves.
+          A transaction hash from any chain the swap touched, the deposit address the quote issued, or
+          the wallet that sent or received it. Nothing is signed and nothing moves.
         </p>
 
         <form
@@ -241,8 +243,8 @@ export default function CheckPage() {
                 onChange={(e) => setQuery(e.target.value)}
                 spellCheck={false}
                 autoComplete="off"
-                placeholder="Transaction hash or deposit address"
-                aria-label="Transaction hash or deposit address"
+                placeholder="Transaction hash, deposit address or wallet"
+                aria-label="Transaction hash, deposit address or wallet"
                 className="w-full rounded-2xl bg-transparent py-4 pr-4 pl-12 font-[family-name:var(--font-mono)] text-sm outline-none placeholder:text-faint"
               />
             </div>
@@ -279,6 +281,17 @@ export default function CheckPage() {
           >
             <EyeOff size={14} />
             Try a confidential swap
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setQuery(WALLET_SAMPLE);
+              void submit(WALLET_SAMPLE);
+            }}
+            className="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2 text-sm font-medium transition-transform hover:-translate-y-0.5"
+          >
+            <Wallet size={14} />
+            Try the wallet that was paid
           </button>
         </div>
 
@@ -368,36 +381,59 @@ export default function CheckPage() {
                 {result.receipt.verdict.summary}
               </h2>
 
-              {delivery?.verified ? (
-                <motion.div
-                  initial={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.97 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.15, duration: 0.5, ease }}
-                  className="mt-8 flex flex-wrap items-center gap-5 rounded-[1.75rem] bg-mint p-6 text-black sm:p-7"
-                >
-                  <span className="flex size-14 items-center justify-center rounded-2xl bg-white">
-                    {deliveryChain ? <ChainLogo name={deliveryChain} size={34} /> : <ShieldCheck size={26} />}
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold opacity-70">
-                      Proven on {delivery.chain}, read from the chain itself
-                    </p>
-                    <p className="figure mt-1 text-[clamp(1.7rem,4vw,2.4rem)] leading-none">
-                      {delivery.deliveredFormatted} delivered
-                    </p>
-                  </div>
-                  {delivery.blockNumber ? (
-                    <div className="ml-auto font-[family-name:var(--font-mono)] text-sm">
-                      <div>block {delivery.blockNumber.toLocaleString("en-US")}</div>
-                      {delivery.blockTimeIso ? (
-                        <div className="opacity-70">{delivery.blockTimeIso.slice(0, 16).replace("T", " ")} UTC</div>
-                      ) : null}
-                    </div>
-                  ) : null}
-                </motion.div>
+              {showEnds && ev ? (
+                <TwoEnds
+                  origin={ev.origin}
+                  delivery={ev.delivery}
+                  unreadable={ev.deliveryUnreadable}
+                  privateMiddle={privateMiddle}
+                />
               ) : null}
 
-              <div className="note-edge mt-8 rounded-[1.75rem] bg-paper p-7 sm:p-9">
+              {result.swaps && result.swaps.length > 0 ? (
+                <ul className="mt-8 grid gap-3">
+                  {result.swaps.map((sw, i) => {
+                    const from = chainFor(sw.origin?.chain);
+                    const to = chainFor(sw.destination?.chain);
+                    return (
+                      <motion.li
+                        key={sw.depositAddress}
+                        initial={reduced ? { opacity: 0 } : { opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.05 * i, duration: 0.4, ease }}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setQuery(sw.depositAddress);
+                            void submit(sw.depositAddress);
+                          }}
+                          className="group flex w-full flex-wrap items-center gap-4 rounded-[1.5rem] border border-line bg-surface p-5 text-left transition-colors hover:border-fg"
+                        >
+                          <span className="flex items-center gap-2">
+                            {from ? <ChainLogo name={from} size={26} /> : null}
+                            <ArrowRight size={15} className="text-faint" />
+                            {to ? <ChainLogo name={to} size={26} /> : null}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block font-semibold">
+                              {sw.amountInFormatted} {sw.origin?.symbol ?? ""} → {sw.amountOutFormatted} {sw.destination?.symbol ?? ""}
+                            </span>
+                            <span className="block text-sm text-muted">
+                              {sw.origin?.chain ?? "?"} to {sw.destination?.chain ?? "?"} · this wallet was the {sw.role}
+                              {sw.createdAt ? ` · ${sw.createdAt.slice(0, 10)}` : ""}
+                            </span>
+                          </span>
+                          <span className="rounded-full bg-paper px-3 py-1 font-[family-name:var(--font-mono)] text-xs">{sw.status ?? "unknown"}</span>
+                          <span className="text-sm font-medium text-mint-ink group-hover:underline">Check it</span>
+                        </button>
+                      </motion.li>
+                    );
+                  })}
+                </ul>
+              ) : null}
+
+              <div className={`note-edge mt-8 rounded-[1.75rem] bg-paper p-7 sm:p-9 ${result.swaps ? "hidden" : ""}`}>
                 <div className="flex items-center justify-between border-b border-line pb-4">
                   <span className="flex items-center gap-2.5 font-semibold">
                     <TallyMark size={22} />
@@ -470,7 +506,7 @@ export default function CheckPage() {
 
               <details className="mt-6">
                 <summary className="cursor-pointer text-sm text-muted transition-colors hover:text-fg">
-                  {result.receipt.sources.length} sources read
+                  {result.receipt.sources.length} source{result.receipt.sources.length === 1 ? "" : "s"} read
                 </summary>
                 <ul className="mt-3 space-y-2">
                   {result.receipt.sources.map((s) => (

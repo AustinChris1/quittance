@@ -1,0 +1,144 @@
+{
+  "case": {
+    "id": "16-both-ends-proven-after-confidential-switch",
+    "expectedLabel": "DELIVERED",
+    "title": "After the 27 October switch: 150 USDC in on Base, 149.83 USDT out on Solana, both ends proven",
+    "frozenAt": "2026-10-28",
+    "provenance": {
+      "status": "Read live from mainnet on 2026-10-28, a day after NEAR switched 1Click to confidential only. The deposit was read on Base and the delivery on Solana, each against its own chain. The exchange between them settled on the NEAR Private Shard and has no public record.",
+      "links": [
+        "https://docs.near-intents.org/changelog/overview",
+        "https://basescan.org/tx/0x3bc28ac85aeed821c5398415c9d968e5039ac43dd40acb66346d7691187440c5",
+        "https://solscan.io/tx/btNXANHfxCauYsocKsnXYcjhPnxn6HXoX2ceSAGtsfqbyo4PK9Ck4Pifs1cmCze6vqKpQc5PhwZJspnu8kxCXPA"
+      ]
+    }
+  },
+  "evidence": {
+    "input": {
+      "depositAddress": "0x2A181fB4368d2Bd939dA7632190df738780129bc",
+      "nearTxHash": "D39jKMxZj4ZM6fPBmZUzVtDJVyxHsVfwuow2eyDqfdRe"
+    },
+    "fetchedAt": "2026-10-28T10:39:10.016Z",
+    "mode": "authenticated",
+    "status": {
+      "available": true,
+      "status": "SUCCESS",
+      "correlationId": "b8c803e7-5f70-47eb-8253-737094b04848",
+      "updatedAt": "2026-10-28T10:18:11.000Z",
+      "depositType": "ORIGIN_CHAIN",
+      "recipientType": "DESTINATION_CHAIN",
+      "originAsset": "nep141:base-0x833589fcd6edb6e08f4c7c32d4f71b54bda02913.omft.near",
+      "destinationAsset": "nep141:sol-c800a4bd850783ccb82c2b2c7e84175443606352.omft.near",
+      "recipient": "FkXdRxncPqvK9QdjAVXrhcs9NpnccKkjx1wEcn7YnyqV",
+      "refundTo": "0xefFE42FCC423E9c41BcB1418fEb4Aa4dA4207548",
+      "amountIn": "150000000",
+      "amountInFormatted": "150.0",
+      "amountOut": "149829629",
+      "quotedAmountOut": "149822559",
+      "quotedAmountOutFormatted": "149.822559",
+      "minAmountOut": "148324333",
+      "refundedAmount": "0",
+      "refundReason": null,
+      "originChainTxHashes": [
+        {
+          "chain": "origin",
+          "hash": "0x3bc28ac85aeed821c5398415c9d968e5039ac43dd40acb66346d7691187440c5"
+        }
+      ],
+      "destinationChainTxHashes": [
+        {
+          "chain": "destination",
+          "hash": "btNXANHfxCauYsocKsnXYcjhPnxn6HXoX2ceSAGtsfqbyo4PK9Ck4Pifs1cmCze6vqKpQc5PhwZJspnu8kxCXPA"
+        }
+      ],
+      "nearTxHashes": [
+        "D39jKMxZj4ZM6fPBmZUzVtDJVyxHsVfwuow2eyDqfdRe",
+        "74rSfBG5HnK99wA5yjupQzJgEHQC9hTSPPKdfLc4nFux"
+      ],
+      "intentHashes": [
+        "3akTcJTEevVgGmBPXrqWzwVUU2GXGohBWTcieHbr6akq"
+      ]
+    },
+    "chain": {
+      "deposits": [],
+      "checked": true,
+      "intentTransfers": [],
+      "nearTxTimeIso": "2026-10-28T10:17:48.171Z",
+      "origin": {
+        "verified": true,
+        "chain": "Base",
+        "tx": "0x3bc28ac85aeed821c5398415c9d968e5039ac43dd40acb66346d7691187440c5",
+        "receiptStatus": "success",
+        "blockNumber": 53196653,
+        "blockTimeIso": "2026-10-28T10:17:33.000Z",
+        "deliveredRaw": "150000000",
+        "deliveredFormatted": "150.000000",
+        "decimals": 6,
+        "recipientMatched": true,
+        "symbol": "USDC"
+      },
+      "delivery": {
+        "verified": true,
+        "chain": "Solana",
+        "tx": "btNXANHfxCauYsocKsnXYcjhPnxn6HXoX2ceSAGtsfqbyo4PK9Ck4Pifs1cmCze6vqKpQc5PhwZJspnu8kxCXPA",
+        "receiptStatus": "success",
+        "blockNumber": 462439625,
+        "blockTimeIso": "2026-10-28T10:18:10.000Z",
+        "deliveredRaw": "149829629",
+        "deliveredFormatted": "149.829629",
+        "decimals": 6,
+        "recipientMatched": true,
+        "symbol": "USDT"
+      }
+    },
+    "sources": [
+      {
+        "name": "1click.status (authenticated)",
+        "url": "https://1click.chaindefuser.com/v0/status?depositAddress=0x2A181fB4368d2Bd939dA7632190df738780129bc",
+        "readAt": "2026-10-28T10:39:10.018Z",
+        "ok": true,
+        "detail": "HTTP 200 unauthenticated, limit 1200"
+      },
+      {
+        "name": "nearblocks.txn",
+        "url": "https://api.nearblocks.io/v1/txns/D39jKMxZj4ZM6fPBmZUzVtDJVyxHsVfwuow2eyDqfdRe",
+        "readAt": "2026-10-28T10:39:11.825Z",
+        "ok": true,
+        "detail": "HTTP 200"
+      },
+      {
+        "name": "1click.tokens",
+        "url": "https://1click.chaindefuser.com/v0/tokens",
+        "readAt": "2026-10-28T10:39:14.244Z",
+        "ok": true,
+        "detail": "HTTP 200"
+      },
+      {
+        "name": "evm.base.receipt",
+        "url": "https://base-rpc.publicnode.com",
+        "readAt": "2026-10-28T10:39:14.474Z",
+        "ok": true,
+        "detail": "HTTP 200"
+      },
+      {
+        "name": "evm.base.block",
+        "url": "https://base-rpc.publicnode.com",
+        "readAt": "2026-10-28T10:39:15.252Z",
+        "ok": true,
+        "detail": "HTTP 200"
+      },
+      {
+        "name": "solana.tx",
+        "url": "https://api.mainnet-beta.solana.com",
+        "readAt": "2026-10-28T10:39:15.472Z",
+        "ok": true,
+        "detail": "HTTP 200"
+      }
+    ],
+    "notes": [
+      "No token movement was decoded from NEAR transaction D39jKMxZj4ZM6fPBmZUzVtDJVyxHsVfwuow2eyDqfdRe.",
+      "Deposit confirmed on Base: 150.000000 reached the deposit address.",
+      "Delivery confirmed on Solana: 149.829629 reached the quoted recipient in block 462439625 at 2026-10-28T10:18:10.000Z."
+    ]
+  }
+}

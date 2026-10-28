@@ -26,6 +26,9 @@ export type Receipt = {
     recipientBalance?: { account: string; token: string; amount: string };
     refundTx?: string;
     delivery?: Evidence["chain"]["delivery"];
+    origin?: Evidence["chain"]["origin"];
+    deliveryUnreadable?: Evidence["chain"]["deliveryUnreadable"];
+    candidates?: Evidence["candidates"];
     connector?: Evidence["connector"];
     notes: string[];
   };
@@ -76,6 +79,9 @@ export function buildReceipt(evidence: Evidence, generatedAt = new Date().toISOS
       recipientBalance: evidence.chain.recipientBalance,
       refundTx: evidence.chain.refundTx?.hash,
       delivery: evidence.chain.delivery,
+      origin: evidence.chain.origin,
+      deliveryUnreadable: evidence.chain.deliveryUnreadable,
+      candidates: evidence.candidates,
       connector: evidence.connector,
       notes: evidence.notes,
     },
@@ -88,6 +94,7 @@ export function buildReceipt(evidence: Evidence, generatedAt = new Date().toISOS
 
 const WIDTH = 78;
 const KEY_COL = 19;
+const MAX_TOKEN = 80;
 
 function line(char = "-"): string {
   return char.repeat(WIDTH);
@@ -101,7 +108,12 @@ function row(key: string, value: string): string {
 }
 
 function wrap(text: string, width: number): string[] {
-  const words = text.split(/\s+/).filter(Boolean);
+  // A Solana signature runs to 88 characters. Fingerprints and hashes up to 80 overflow the
+  // column but stay whole, so they can be copied; only longer tokens are cut.
+  const words = text
+    .split(/\s+/)
+    .filter(Boolean)
+    .flatMap((w) => (w.length <= MAX_TOKEN ? [w] : (w.match(new RegExp(`.{1,${MAX_TOKEN}}`, "g")) ?? [w])));
   const lines: string[] = [];
   let current = "";
   for (const word of words) {
@@ -145,7 +157,25 @@ export function renderText(receipt: Receipt): string {
   }
   out.push(row("refunded_amount", e.refundedAmount ?? "0"));
   out.push(row("refund_reason", e.refundReason ?? "null"));
+  for (const c of e.candidates ?? []) {
+    out.push(
+      row(
+        "swap",
+        `${c.depositAddress}  ${c.status ?? "?"}  ${c.amountInFormatted ?? "?"} -> ${c.amountOutFormatted ?? "?"}  as ${c.role}  ${c.createdAt?.slice(0, 10) ?? ""}`,
+      ),
+    );
+  }
   for (const h of e.originChainTxHashes) out.push(row("origin_chain_tx", shorten(h)));
+  if (e.origin) {
+    out.push(
+      row(
+        "deposit_proof",
+        e.origin.verified
+          ? `${e.origin.deliveredFormatted} ${e.origin.symbol ?? ""} on ${e.origin.chain}, block ${e.origin.blockNumber ?? "?"}`
+          : `not confirmed on ${e.origin.chain}`,
+      ),
+    );
+  }
   for (const h of e.nearTxHashes) out.push(row("near_tx", shorten(h)));
   if (e.creditedTo) {
     out.push(row("credited_to", `${e.creditedTo.account}    ${e.creditedTo.amount} ${e.creditedTo.token}`));

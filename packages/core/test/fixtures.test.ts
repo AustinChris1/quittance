@@ -6,6 +6,7 @@ import { classify } from "../src/classify.ts";
 import { buildReceipt, canonicalJson, renderText } from "../src/receipt.ts";
 import type { Evidence } from "../src/types.ts";
 import { LABELS } from "../src/labels.ts";
+import { tronToHex } from "../src/sources/tron.ts";
 
 const FIXTURE_DIR = join(import.meta.dirname, "../../../fixtures");
 
@@ -24,7 +25,7 @@ function loadFixtures(): Fixture[] {
 const fixtures = loadFixtures();
 
 test("every fixture is classified as its recorded label", () => {
-  assert.ok(fixtures.length >= 15, "expected the full frozen case set");
+  assert.ok(fixtures.length >= 17, "expected the full frozen case set");
   for (const fixture of fixtures) {
     const { verdict } = classify(fixture.evidence);
     assert.equal(
@@ -126,5 +127,28 @@ test("the rendered receipt carries the label, the rule and the fingerprint", () 
     for (const line of text.split("\n")) {
       assert.ok(line.length <= 100, `${fixture.case.id} receipt line too wide: ${line.length}`);
     }
+  }
+});
+
+test("tron addresses decode to the hex the chain logs carry", () => {
+  // USDT on TRON, as the token list names it and as its Transfer logs record it.
+  assert.equal(tronToHex("TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"), "41a614f803b6fd780986a42c78ec9c7f77e6ded13c");
+  assert.equal(tronToHex("not-base58-0OIl"), undefined);
+});
+
+test("the private middle is named only for swaps after the confidential switch", () => {
+  const byId = (id: string) => fixtures.find((f) => f.case.id === id)!;
+  const after = classify(byId("16-both-ends-proven-after-confidential-switch").evidence).verdict;
+  const before = classify(byId("01-reported-stranded-actually-delivered").evidence).verdict;
+  assert.ok(after.limits.some((l) => l.includes("NEAR Private Shard")), "a post-switch swap must name the private middle");
+  assert.ok(!before.limits.some((l) => l.includes("NEAR Private Shard")), "a September swap predates the switch");
+});
+
+test("both ends are claimed only when both were read on their own chains", () => {
+  for (const fixture of fixtures) {
+    const v = classify(fixture.evidence).verdict;
+    if (!v.summary.includes("Both ends proven")) continue;
+    assert.ok(fixture.evidence.chain.origin?.verified, `${fixture.case.id} claims both ends without a proven deposit`);
+    assert.ok(fixture.evidence.chain.delivery?.verified, `${fixture.case.id} claims both ends without a proven delivery`);
   }
 });

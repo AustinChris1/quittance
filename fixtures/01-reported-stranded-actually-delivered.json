@@ -100,9 +100,23 @@
         "deliveredRaw": "190995293894",
         "deliveredFormatted": "190995.293894",
         "recipientMatched": true,
-        "decimals": 6
+        "decimals": 6,
+        "symbol": "USDT"
       },
-      "nearTxTimeIso": "2026-09-11T16:27:04.048Z"
+      "nearTxTimeIso": "2026-09-11T16:27:04.048Z",
+      "origin": {
+        "verified": true,
+        "chain": "TRON",
+        "tx": "d9b9c4c3c88f99d78e9484871eaa8b1ee938bd67aad2093341817a600b8cfd67",
+        "receiptStatus": "success",
+        "blockNumber": 86157305,
+        "blockTimeIso": "2026-09-11T16:25:57.000Z",
+        "deliveredRaw": "575830000000",
+        "deliveredFormatted": "575830.000000",
+        "decimals": 6,
+        "recipientMatched": true,
+        "symbol": "TRX"
+      }
     },
     "sources": [
       {
