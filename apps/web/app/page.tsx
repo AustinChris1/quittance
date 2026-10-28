@@ -3,6 +3,7 @@ import {
   ArrowRight,
   ArrowUpRight,
   BookOpen,
+  Search,
   CheckCircle2,
   CircleHelp,
   DoorOpen,
@@ -76,22 +77,25 @@ export default function Home() {
     <main className="relative overflow-hidden">
       <ScrollCinema />
 
-      <header className="relative z-20 mx-auto flex max-w-7xl items-center justify-between px-6 py-6">
-        <Wordmark />
-        <nav className="flex items-center gap-3 text-sm">
+      <header className="relative z-20 mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-5 sm:px-6 sm:py-6">
+        <Wordmark className="shrink-0" />
+        {/* On phones the primary action folds to its icon; the hero button below carries the label. */}
+        <nav className="flex items-center gap-1.5 text-sm sm:gap-3">
           <Link
             href="/docs"
-            className="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2.5 transition-colors hover:border-fg"
+            className="inline-flex h-10 items-center gap-1.5 rounded-full border border-line px-3 whitespace-nowrap transition-colors hover:border-fg sm:gap-2 sm:px-4 max-[359px]:w-10 max-[359px]:justify-center max-[359px]:px-0"
           >
             <BookOpen size={15} />
-            Docs
+            <span className="max-[359px]:sr-only">Docs</span>
           </Link>
           <ThemeToggle />
           <Link
             href="/check"
-            className="rounded-full bg-fg px-5 py-2.5 font-medium text-bg transition-transform hover:-translate-y-0.5"
+            aria-label="Check a swap"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-fg font-medium whitespace-nowrap text-bg transition-transform hover:-translate-y-0.5 max-sm:w-10 sm:px-5"
           >
-            Check a swap
+            <Search size={16} className="sm:hidden" />
+            <span className="hidden sm:inline">Check a swap</span>
           </Link>
         </nav>
       </header>

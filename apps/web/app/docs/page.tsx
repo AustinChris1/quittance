@@ -388,22 +388,22 @@ const FAQ: { q: string; a: React.ReactNode }[] = [
 export default function DocsPage() {
   return (
     <main id="top" className="min-h-dvh">
-      <header className="mx-auto flex max-w-7xl items-center justify-between px-4 py-5 sm:px-6">
-        <div className="flex items-center gap-3">
+      <header className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-5 sm:px-6">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
           <Link href="/" className="transition-opacity hover:opacity-75">
             <Wordmark />
           </Link>
           <span className="rounded-full bg-paper px-2.5 py-1 text-xs font-semibold text-muted">Docs</span>
         </div>
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-3">
           <a href={REPO} target="_blank" rel="noreferrer" className="hidden items-center gap-2 rounded-full border border-line px-4 py-2.5 text-sm transition-colors hover:border-fg sm:inline-flex">
             <Code2 size={15} />
             Source
           </a>
           <ThemeToggle />
-          <Link href="/check" className="inline-flex items-center gap-2 rounded-full bg-fg px-4 py-2.5 text-sm font-medium text-bg transition-transform hover:-translate-y-0.5">
+          <Link href="/check" aria-label="Check a swap" className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-fg text-sm font-medium whitespace-nowrap text-bg transition-transform hover:-translate-y-0.5 max-sm:w-10 sm:px-4">
             <Search size={15} />
-            Check a swap
+            <span className="hidden sm:inline">Check a swap</span>
           </Link>
         </div>
       </header>

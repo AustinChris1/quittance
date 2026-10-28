@@ -206,25 +206,26 @@ export default function CheckPage() {
 
   return (
     <main className="relative min-h-dvh">
-      <header className="relative mx-auto flex max-w-5xl items-center justify-between px-6 py-6">
-        <Link href="/" className="transition-opacity hover:opacity-75">
+      <header className="relative mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-5 sm:px-6 sm:py-6">
+        <Link href="/" className="shrink-0 transition-opacity hover:opacity-75">
           <Wordmark />
         </Link>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-3">
           <Link
             href="/docs"
-            className="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2.5 text-sm transition-colors hover:border-fg"
+            className="inline-flex h-10 items-center gap-1.5 rounded-full border border-line px-3 text-sm whitespace-nowrap transition-colors hover:border-fg sm:gap-2 sm:px-4 max-[359px]:w-10 max-[359px]:justify-center max-[359px]:px-0"
           >
             <BookOpen size={15} />
-            Docs
+            <span className="max-[359px]:sr-only">Docs</span>
           </Link>
           <ThemeToggle />
           <Link
             href="/"
-            className="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2.5 text-sm transition-colors hover:border-fg"
+            aria-label="Back"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-full border border-line text-sm whitespace-nowrap transition-colors hover:border-fg max-sm:w-10 sm:px-4"
           >
             <ArrowLeft size={15} />
-            Back
+            <span className="hidden sm:inline">Back</span>
           </Link>
         </div>
       </header>
