@@ -2,11 +2,16 @@
 
 A receipt for money that crossed chains.
 
-When a NEAR Intents swap says it failed, or says it succeeded and nothing arrives, Quittance
-takes the deposit, reads only public records, and returns one of eight labels plus the evidence
-behind it. It holds no keys, moves no funds, and opens no support tickets.
+Paste a transaction hash from any chain a NEAR Intents swap touched, the deposit address its quote
+issued, or the wallet that sent or received it. Quittance reads public records only, proves the
+deposit and the payout on the chains they happened on, and returns one of eight labels with the
+facts it observed, the limits of what it can see, and the next step. It holds no keys, moves no
+funds, and opens no support tickets.
 
 A quittance is an old legal word for a written receipt proving an obligation has been discharged.
+
+- Live: https://quittance-five.vercel.app
+- Docs: https://quittance-five.vercel.app/docs
 
 ## What it found on its first real case
 
@@ -15,25 +20,53 @@ The most cited stuck deposit in the ecosystem, 575,830 TRX reported on the NEAR 
 
 | When | What | Verified against |
 | --- | --- | --- |
-| 2026-09-11 16:25:30Z | Quote created, 575,830 TRX in | Intents Explorer record |
+| 2026-09-11 16:25:57Z | 575,830 TRX reached the deposit address `TBy2io...2sus` | TRON block 86,157,305 |
 | 2026-09-11 16:27:04Z | 575,830 TRX credited to `intents.near` | NEAR chain |
 | 2026-09-27 11:16:35Z | 190,995.293894 USDT delivered to `0x632f...8bad` | Ethereum block 26,068,435 |
 | 2026-10-09 | Forum post: FAILED since 12 Sep, zero refund, no reply | gov.near.org thread 42664 |
 
-Settlement took about 16 days, 15 days and 19 hours from deposit to delivery. The public report of a loss was filed 12 days after the money arrived,
-and the thread is still open and still unanswered. The poster cited `refundedAmount: 0` as proof
-they got nothing back, when on a settled swap that field is correctly zero because no refund was
-due. A healthy field read as a symptom.
+Settlement took about 16 days, 15 days and 19 hours from deposit to delivery. The public report of
+a loss was filed 12 days after the money arrived, and the thread is still open and unanswered. The
+poster cited `refundedAmount: 0` as proof they got nothing back, when on a settled swap that field
+is correctly zero because no refund was due. A healthy field read as a symptom.
 
-The Ethereum transfer was confirmed by querying an Ethereum node directly, not by trusting the
-operator's record. The amount reconciles too: the quote promised 191,757.901149 USDT with a
-guaranteed minimum of 189,840.322137 at 1 percent slippage, and 190,995.293894 arrived, 0.40
-percent under the quote and inside its guarantee. That is the whole thesis: a status word is not an answer, in either direction.
+Both ends were read on their own chains, not taken from the operator's record: the deposit from a
+TRON node, the payout from an Ethereum node. The amount reconciles too. The quote promised
+191,757.901149 USDT with a guaranteed minimum of 189,840.322137 at 1 percent slippage, and
+190,995.293894 arrived, 0.40 percent under the quote and inside its guarantee. That is the whole
+thesis: a status word is not an answer, in either direction.
 
-## How big is this, beyond one case
+## Why the two ends matter now
 
-One anecdote is not a problem statement, so Quittance measures the population. Run it yourself
-with `node apps/cli/src/main.ts study --save`, which writes a dated snapshot to `studies/`.
+On 27 October 2026, NEAR's [changelog](https://docs.near-intents.org/changelog/overview) says
+1Click swaps roll out as confidential only. The exchange settles on the NEAR Private Shard, and
+`nearTxHashes` lists only the public shield and unshield. So the status word now describes a step
+no public record can reach. What stays public is the deposit on the origin chain and the payout on
+the destination chain, and those are exactly what Quittance proves. The receipt names the private
+middle for what it is and never paints it as proven.
+
+## How much of real traffic it can prove
+
+Measured on 2026-10-28 over the 1,000 most recent successful swaps, with
+`node apps/cli/src/main.ts coverage --check 100 --save`. The snapshot is
+[`studies/coverage-2026-10-28.json`](studies/coverage-2026-10-28.json).
+
+| Measure | Result |
+| --- | --- |
+| External payouts on a chain Quittance reads | **81.8%** of payouts, 82.8% of quoted value |
+| The same for an ERC20-only reader, before this version | 27.0% of payouts, 36.8% of value |
+| Payouts actually proven on their own chain, of 100 checked | **99**, one inconclusive, none contradicted |
+| Payouts to shielded Zcash addresses, unprovable by anyone | 7 |
+| How the last 1,000 swaps of any status ended | 965 SUCCESS, 24 REFUNDED, 9 PROCESSING, 2 FAILED |
+
+The inconclusive one is a native coin paid inside a contract call, which public endpoints cannot
+show without a trace. Chains not yet read independently are listed in the snapshot; for them the
+receipt says delivery rests on the operator's record.
+
+## How big the problem is
+
+Most swaps settle. The finding is the tail. Run `node apps/cli/src/main.ts study --save` to
+reproduce it.
 
 Measured 2026-10-26:
 
@@ -42,20 +75,15 @@ Measured 2026-10-26:
 | `FAILED` | 1000 (capped) | 145 | 29 | $1,959 | 27 days |
 | `PROCESSING` | 310 (full) | 283 | **44** | **$334,054** | **255 days** |
 
-Read this honestly, because the headline is not that the system is broken. In a separate
-one-hour window, 978 of 1000 swaps succeeded. Most `FAILED` records never received a deposit at
-all; they are abandoned quotes, which is why the classifier refuses to say `STRANDED` without a
-landed deposit. Refunds largely work, and no `REFUNDED` record in the sample was older than seven
-days.
+Most `FAILED` records never received a deposit at all; they are abandoned quotes, which is why the
+classifier refuses to say `STRANDED` without a landed deposit. Forty-four swaps took a deposit,
+produced no destination transaction and charged no refund fee, and have sat that way for a median
+of 255 days. The largest single one is $114,620 of quoted notional. Those are not pending; they are
+forgotten. And the people holding them cannot look them up, for the reason further down.
 
-The finding is the tail. Forty-four swaps took a deposit, produced no destination transaction and
-charged no refund fee, and have sat that way for a median of 255 days. The largest single one is
-$114,620 of quoted notional. Those are not pending; they are forgotten. And the people holding
-them cannot look them up, for the reason in the next section.
-
-Notional is the quoted USD value at creation, not a realised loss, and some may yet settle, as
-the case above did after sixteen days. The snapshot retains counts only: no addresses, no
-per-user amounts, no identifiers.
+Notional is the quoted USD value at creation, not a realised loss, and some may yet settle, as the
+case above did after sixteen days. Snapshots retain counts only: no addresses, no per-user
+amounts, no identifiers.
 
 ## Run it
 
@@ -68,7 +96,7 @@ Requires Node 24 or newer (`node --version`).
 node apps/cli/src/main.ts verify
 ```
 
-Expect `labels correct 15 of 15` and a median classify time under a millisecond.
+Expect `labels correct 17 of 17` and a median classify time under a millisecond.
 
 **Step 2 - print the receipt for the case above.**
 
@@ -76,33 +104,36 @@ Expect `labels correct 15 of 15` and a median classify time under a millisecond.
 node apps/cli/src/main.ts replay 01-reported-stranded-actually-delivered
 ```
 
-Expect `LABEL DELIVERED` and the published destination transaction, against a forum thread that
-still says the money is gone.
+Expect `LABEL DELIVERED`, a `deposit_proof` row for 575,830 TRX on TRON, and the published
+destination transaction, against a forum thread that still says the money is gone.
 
 **Step 3 - read live from mainnet, with no key of any kind.**
 
 ```
-node apps/cli/src/main.ts check --tx 8a33DkKfZMWRKbK2pXuQAWVLXSy4AyZF6PfcENvCJgCb
+node apps/cli/src/main.ts check --deposit TBy2io3Q3Jt4UM4ejDhkkUQJZgZuXw2sus
 node apps/cli/src/main.ts check --deposit 0xDF7A93d400159d0f8f40AAe42576d01285EA9e39 --json
 ```
 
-The first proves the chain facts and returns `UNDETERMINED`, because a NEAR transaction alone does
-not tell you what the operator thinks happened. The second uses an address the operator has never
-seen, on purpose: it calls the status endpoint with no credentials at all, and the receipt cites
-`HTTP 404 unauthenticated, limit 1200`, which is the server confirming it processed an anonymous
-lookup. It is **not** the address of the $193K swap. That one is
-`TBy2io3Q3Jt4UM4ejDhkkUQJZgZuXw2sus`, a TRON address, which step 3b resolves to.
+The first is the deposit address of the $193K swap. The status endpoint answers without a key,
+and Quittance reads both ends on their own chains. The receipt opens with one plain sentence:
+*Delivered on Ethereum about 16 days after the deposit. Both ends proven on their own chains: the
+deposit on TRON, the delivery on Ethereum.*
 
-**Step 3b - resolve the whole thing, if you have a partner JWT in `.env`.**
+The second uses an address the operator has never seen, on purpose. It calls the status endpoint
+with no credentials at all, and the receipt cites `HTTP 404 unauthenticated, limit 1200`, which is
+the server confirming it processed an anonymous lookup.
+
+**Step 3b - search by any transaction or wallet, if you have a partner JWT in `.env`.**
 
 ```
-node apps/cli/src/main.ts check --search 8a33DkKfZMWRKbK2pXuQAWVLXSy4AyZF6PfcENvCJgCb
+node apps/cli/src/main.ts check --search 0x9be9c2f8ed78d32ecf222bca3595d50cc42aed979030e4ebf0f84a626e13421a
+node apps/cli/src/main.ts check --search 0x632F5D32448DE43b8b9cfD063aCfcDac09108bad
 ```
 
-This is the full chain: a transaction hash resolves through the Explorer to its deposit address,
-the status fields come back, and the verdict turns from `UNDETERMINED` into `DELIVERED`. It is the
-one thing a partner token genuinely unlocks. The receipt opens with one plain sentence: *Delivered
-on Ethereum about 16 days after the deposit, and proven on that chain rather than taken on trust.*
+The first is the Ethereum payout of the same swap: any transaction from either end resolves to it.
+The second is the wallet that was paid. A wallet appears in many swaps, so Quittance does not guess
+one. It lists the swaps the wallet sent, received or was refunded in, and each can be checked next.
+Search is the one thing a partner token genuinely unlocks.
 
 **Step 3c - a confidential swap, which no public index can see.**
 
@@ -113,17 +144,16 @@ node apps/cli/src/main.ts check --search 3djtQ3pUHv8SGtNKS3CMGice7E7S9oeS4DJzNYy
 Expect `SHIELDED_UNPROVEN`. This is one of the two swaps reported in
 [near/intents#384](https://github.com/near/intents/issues/384) as a misroute. Neither the status
 endpoint nor the Explorer has any record of it. The only public trace is a successful
-`execute_intents` call that emits no ordinary token events at all, so Quittance decodes the signed
-NEP-413 intent inside it: 0.038 ETH on Robinhood Chain, transferred to the documented Confidential
-Intents treasury. That is the shield step. The receipt says so, and says just as plainly that
-public records can prove neither delivery nor loss from there. It names only the lookups it
-actually made: the Explorer was searched and had nothing, and the status endpoint was never called
-because no deposit address exists to call it with.
+`execute_intents` call that emits no ordinary token events, so Quittance decodes the signed NEP-413
+intent inside it: 0.038 ETH on Robinhood Chain, transferred to the documented Confidential Intents
+treasury. That is the shield step, and it has no public out. The receipt says so, and says just as
+plainly that public records can prove neither delivery nor loss from there. It names only the
+lookups it actually made.
 
 "Private" has a precise meaning here, and the receipt states it. NEAR's
 [Confidential Intents documentation](https://docs.near-intents.org/integration/market-makers/confidential-intents)
-describes FAR as a permissioned instance of the NEAR protocol run by a small validator set, with
-a private RPC. So the balances are hidden from public indexers, not from those validators.
+describes FAR as a permissioned instance of the NEAR protocol run by a small validator set, with a
+private RPC. So the balances are hidden from public indexers, not from those validators.
 
 **Step 4 - close the loop into an endpoint you control.**
 
@@ -150,18 +180,34 @@ pnpm install
 pnpm -C apps/web build && pnpm -C apps/web start
 ```
 
-Open http://localhost:3000 for the story, or go straight to a resolved result at
-http://localhost:3000/check?q=8a33DkKfZMWRKbK2pXuQAWVLXSy4AyZF6PfcENvCJgCb
+Open http://localhost:3000 for the story, http://localhost:3000/docs for the documentation, or go
+straight to a resolved result at
+http://localhost:3000/check?q=TBy2io3Q3Jt4UM4ejDhkkUQJZgZuXw2sus
 
-The partner token is read server side and never reaches the browser. Without one the
-interface still runs; it reports what it could not resolve instead of guessing.
+The partner token is read server side and never reaches the browser. Without one the interface
+still runs; it reports what it could not resolve instead of guessing.
 
-**Step 6 - see the rules themselves.**
+**Step 6 - see the rules and measure the rails.**
 
 ```
 node apps/cli/src/main.ts rules
 node --test packages/core/test/fixtures.test.ts
+node apps/cli/src/main.ts coverage --save
 ```
+
+## Where it proves a transfer
+
+| Chain | Read |
+| --- | --- |
+| Ethereum, Base, Arbitrum, Optimism, Polygon, BNB Chain, Gnosis, Avalanche, Robinhood Chain | Transfer logs for tokens, transaction value for the native coin |
+| TRON | TRC20 Transfer logs, and TRX transfers |
+| Solana | Token balance changes by mint and owner, and lamport changes for SOL |
+| NEAR | Credits to `intents.near`, and transfers inside signed intents |
+
+Each asset's chain, contract and decimals come from the public 1Click token list, so nothing is
+guessed from an asset id. A chain that answers and does not show the transfer is a contradiction.
+A read that fails on every endpoint is unread. A native coin paid inside a contract call is
+inconclusive. Only the first can change a verdict.
 
 ## What a partner key is for, and what the real barrier is
 
@@ -177,17 +223,16 @@ unauthenticated when a supplied key returns 401, and records which tier the serv
 receipt's `sources`. A partner key governs the quote fee schedule, where unauthenticated quotes
 carry an extra 0.25 percent platform fee. It is not a gate on reading.
 
-The real barrier is the shape of the lookup, and it is worse than a missing parameter.
-`/v0/status` accepts a deposit address plus an optional memo, and nothing else. There is no
-correlation-id parameter, and there could not usefully be one: the correlation id is a per-request
-trace, not a swap identifier. Three consecutive calls for the same swap returned
-`7ff00f92-...`, `b9784595-...` and `98b41cc8-...`. The specification says as much, describing it as
-a "unique identifier for request tracing and debugging".
+The real barrier is the shape of the lookup. `/v0/status` accepts a deposit address plus an
+optional memo, and nothing else. There is no correlation-id parameter, and there could not usefully
+be one: the correlation id is a per-request trace, not a swap identifier. Three consecutive calls
+for the same swap returned `7ff00f92-...`, `b9784595-...` and `98b41cc8-...`. The specification
+says as much, describing it as a "unique identifier for request tracing and debugging".
 
 So when a support thread quotes a correlation id as the handle for a stuck swap, which is exactly
 what the case above does, it is quoting the id of one HTTP request made weeks earlier. Nobody can
-resolve it, including the operator. That is why Quittance keys from a transaction hash and
-resolves through the Explorer instead.
+resolve it, including the operator. That is why Quittance accepts any transaction, deposit address
+or wallet, and resolves through the Explorer.
 
 ## The labels
 
@@ -200,7 +245,7 @@ resolves through the Explorer instead.
 | `DELIVERED` | A destination transaction is published, and read from the destination chain where it can be. |
 | `REFUNDED_OK` | The money went back to the refund address. |
 | `IN_FLIGHT` | Not terminal yet. |
-| `UNDETERMINED` | Not enough evidence. A gap in the rules, not a clean bill of health. |
+| `UNDETERMINED` | Not enough evidence, or the chain contradicts the record. Never a clean bill of health. |
 
 Rules are evaluated in a fixed order and the first match wins. Every verdict carries a `basis`
 (facts observed), `limits` (what it cannot see) and a `next` action. No verdict is produced
@@ -220,8 +265,8 @@ delivery cannot be verified from public data rather than claiming a loss. A test
 
 ## Evidence
 
-Frozen on 2026-10-26, each fixture carrying its own provenance block. Three of the cases were
-open and unanswered in `near/intents` when they were recorded.
+Each fixture carries its own provenance block. Three of the cases were open and unanswered in
+`near/intents` when they were recorded.
 
 | Case | Source |
 | --- | --- |
@@ -235,9 +280,11 @@ open and unanswered in `near/intents` when they were recorded.
 | `13-shield-then-delivered` | Regression guard. A proven delivery beats a shield step, so the treasury rule never hides an arrival |
 | `14-success-contradicted-by-chain` | Regression guard. A SUCCESS whose published destination transaction pays someone else reads `UNDETERMINED`, never `DELIVERED` |
 | `15-success-chain-unreachable` | Regression guard. When the destination chain cannot be reached, `DELIVERED` rests on the operator record and the receipt says so |
+| `16-both-ends-proven-after-confidential-switch` | Read live on 2026-10-28, the day after the switch: 150 USDC in on [Base](https://basescan.org/tx/0x3bc28ac85aeed821c5398415c9d968e5039ac43dd40acb66346d7691187440c5), 149.829629 USDT out on [Solana](https://solscan.io/tx/btNXANHfxCauYsocKsnXYcjhPnxn6HXoX2ceSAGtsfqbyo4PK9Ck4Pifs1cmCze6vqKpQc5PhwZJspnu8kxCXPA) |
+| `17-payout-inside-contract-call` | Regression guard. A payout the chain cannot show is inconclusive, never a contradiction |
 
-On case 01 the chain was the better witness, and it overturned the report. The deposit confirms at
-block 215,243,812 with a block timestamp of 2026-09-11T16:27:04Z, one day earlier than the forum
+On case 01 the chain was the better witness, and it overturned the report. The deposit confirms on
+TRON at 2026-09-11T16:25:57Z and is credited on NEAR at 16:27:04Z, one day earlier than the forum
 post states, and the Ethereum delivery lands on 2026-09-27. The fixture records the correction,
 not the claim, and its provenance block carries the full timeline.
 
@@ -245,15 +292,17 @@ not the claim, and its provenance block carries the full timeline.
 
 ```
 packages/core/src/classify.ts     ordered rules, first match wins
+packages/core/src/gather.ts       resolves the swap and assembles evidence
 packages/core/src/receipt.ts      canonical JSON, sha256 fingerprint, text rendering
-packages/core/src/gather.ts       assembles evidence from the readers
-packages/core/src/sources/        1Click status, Explorer, NEAR RPC, NearBlocks, EVM receipts
+packages/core/src/sources/        1Click status and tokens, Explorer, NearBlocks, NEAR RPC,
+                                  EVM, TRON, Solana
 packages/core/src/webhook.ts      the only write, HMAC signed
-apps/cli/src/main.ts              check, replay, cases, verify, rules
+packages/core/src/coverage.ts     how many real payouts can be proven
+packages/core/src/study.ts        the stuck tail, aggregates only
+apps/cli/src/main.ts              check, replay, cases, verify, rules, study, coverage
 apps/sink/src/main.ts             reference receiver, stands in for an integrator endpoint
-apps/web                          landing page and the resolver interface
-packages/core/src/study.ts        population measurement, aggregates only
-studies/                          dated snapshots of that measurement
+apps/web                          landing page, the checker, the docs and the API
+studies/                          dated measurement snapshots
 fixtures/                         frozen cases with provenance
 ```
 

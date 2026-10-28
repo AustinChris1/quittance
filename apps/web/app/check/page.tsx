@@ -6,6 +6,7 @@ import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import {
   ArrowLeft,
   ArrowRight,
+  BookOpen,
   CheckCircle2,
   CircleHelp,
   Copy,
@@ -210,7 +211,11 @@ export default function CheckPage() {
           <Wordmark />
         </Link>
         <div className="flex items-center gap-3">
-          <Link href="/docs" className="px-2 text-sm text-muted transition-colors hover:text-fg">
+          <Link
+            href="/docs"
+            className="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2.5 text-sm transition-colors hover:border-fg"
+          >
+            <BookOpen size={15} />
             Docs
           </Link>
           <ThemeToggle />

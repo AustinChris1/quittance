@@ -19,6 +19,8 @@ export type Coverage = {
   notYetRead: Record<string, number>;
   /** Payouts actually checked on chain, spread evenly across the window. */
   proven: { checked: number; verified: number; inconclusive: number; contradicted: number; unread: number };
+  /** How the most recent swaps of every status ended, so the rate sits beside the tail. */
+  statusMix: { sampled: number; counts: Record<string, number> };
   provenByChain: Record<string, number>;
   notes: string[];
 };
@@ -47,6 +49,20 @@ export async function runCoverage(params: { token: string; size?: number; check?
   if (!res.ok || !Array.isArray(res.data)) throw new Error(`Explorer read failed: ${res.source.detail ?? "unknown"}`);
   const rows = res.data;
   const { tokens } = await loadTokens();
+
+  // The Explorer allows one request every five seconds per partner id.
+  await new Promise((r) => setTimeout(r, 5500));
+  const mixUrl = new URL("/api/v0/transactions", DEFAULT_EXPLORER_BASE);
+  mixUrl.searchParams.set("numberOfTransactions", String(params.size ?? 1000));
+  const mixRes = await readJson<{ status?: string }[]>({
+    name: "intents.explorer.recent-all",
+    url: mixUrl.toString(),
+    headers: { Authorization: `Bearer ${params.token}` },
+    timeoutMs: 60_000,
+  });
+  const counts: Record<string, number> = {};
+  const mixRows = mixRes.ok && Array.isArray(mixRes.data) ? mixRes.data : [];
+  for (const r of mixRows) counts[r.status ?? "unknown"] = (counts[r.status ?? "unknown"] ?? 0) + 1;
 
   const chainOf = (r: Row) => tokens.get(r.destinationAsset ?? "")?.blockchain;
   const usd = (xs: Row[]) => xs.reduce((a, r) => a + Number(r.amountOutUsd ?? 0), 0);
@@ -101,6 +117,7 @@ export async function runCoverage(params: { token: string; size?: number; check?
     notYetRead,
     proven,
     provenByChain,
+    statusMix: { sampled: mixRows.length, counts },
     notes: [
       "Readable means the destination chain is one Quittance reads. Proven means the payout was read on that chain and matched the quoted recipient.",
       "USD is the quoted value at creation, not a realised amount.",
@@ -125,6 +142,8 @@ export function renderCoverage(c: Coverage): string {
         ? ` (inconclusive ${c.proven.inconclusive}, contradicted ${c.proven.contradicted}, unread ${c.proven.unread})`
         : ""),
     `by chain                  ${Object.entries(c.provenByChain).map(([k, v]) => `${k} ${v}`).join(", ")}`,
+    "",
+    `last ${c.statusMix.sampled} swaps, any status ${Object.entries(c.statusMix.counts).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${v}`).join(", ")}`,
   ];
   return lines.join("\n");
 }

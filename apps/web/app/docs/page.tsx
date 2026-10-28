@@ -482,10 +482,10 @@ export default function DocsPage() {
             <H3 id="numbers">Measured, not claimed</H3>
             <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {[
-                { n: "81.1%", l: "of external payouts are on a chain Quittance reads", s: "up from 25.6% for an ERC20-only reader. 1,000 swaps, 28 Oct" },
+                { n: "81.8%", l: "of external payouts are on a chain Quittance reads", s: "up from 27.0% for an ERC20-only reader. 1,000 swaps, 28 Oct" },
                 { n: "99 / 100", l: "sampled payouts proven on their own chain", s: "one inconclusive, none contradicted. 28 Oct" },
                 { n: "44", l: "swaps took a deposit and returned nothing", s: "median age 255 days, $334K quoted. 26 Oct" },
-                { n: "978 / 1000", l: "swaps settle normally", s: "one hour, 26 Oct. The problem is the tail, not the rate" },
+                { n: "17", l: "frozen cases re-classified on every test run", s: "each with provenance: what was read on chain, and what was only reported" },
               ].map((s) => (
                 <div key={s.l} className="rounded-[1.5rem] bg-fg p-5 text-bg">
                   <p className="figure text-[2rem] leading-none text-mint">{s.n}</p>

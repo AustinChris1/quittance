@@ -2,6 +2,7 @@ import Link from "next/link";
 import {
   ArrowRight,
   ArrowUpRight,
+  BookOpen,
   CheckCircle2,
   CircleHelp,
   DoorOpen,
@@ -78,13 +79,11 @@ export default function Home() {
       <header className="relative z-20 mx-auto flex max-w-7xl items-center justify-between px-6 py-6">
         <Wordmark />
         <nav className="flex items-center gap-3 text-sm">
-          <a
-            className="hidden px-3 text-muted transition-colors hover:text-fg sm:inline"
-            href="https://github.com/AustinChris1/quittance"
+          <Link
+            href="/docs"
+            className="inline-flex items-center gap-2 rounded-full border border-line px-4 py-2.5 transition-colors hover:border-fg"
           >
-            Repository
-          </a>
-          <Link className="px-2 text-muted transition-colors hover:text-fg sm:px-3" href="/docs">
+            <BookOpen size={15} />
             Docs
           </Link>
           <ThemeToggle />
@@ -222,7 +221,8 @@ export default function Home() {
             Not a broken system. An unanswerable one.
           </h2>
           <p className="mt-6 max-w-xl text-lg opacity-70">
-            978 of 1,000 swaps settle. The problem is the tail nobody can see into.
+            965 of the last 1,000 swaps settled, measured 28 October. The problem is the tail nobody
+            can see into.
           </p>
 
           <div className="mt-20 grid gap-14 sm:grid-cols-3">

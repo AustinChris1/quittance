@@ -1,38 +1,38 @@
 {
-  "at": "2026-10-28T12:35:45.253Z",
+  "at": "2026-10-28T12:47:08.145Z",
   "window": {
-    "from": "2026-10-28T11:02:18.347Z",
-    "to": "2026-10-28T12:33:57.762Z"
+    "from": "2026-10-28T11:15:09.408Z",
+    "to": "2026-10-28T12:45:31.476Z"
   },
   "sampled": 1000,
-  "externalPayouts": 979,
+  "externalPayouts": 978,
   "readable": {
-    "count": 794,
-    "share": 81.1,
-    "usdShare": 80.8
+    "count": 800,
+    "share": 81.8,
+    "usdShare": 82.8
   },
   "erc20Only": {
-    "count": 251,
-    "share": 25.6,
-    "usdShare": 36.7
+    "count": 264,
+    "share": 27,
+    "usdShare": 36.8
   },
   "shieldedZcash": 7,
   "notYetRead": {
-    "near": 75,
-    "ton": 26,
-    "sui": 8,
-    "ltc": 14,
-    "xrp": 17,
-    "btc": 17,
-    "zec": 8,
-    "stellar": 1,
+    "xrp": 18,
+    "ton": 20,
+    "ltc": 18,
+    "btc": 18,
+    "near": 69,
+    "stellar": 2,
+    "sui": 9,
+    "zec": 6,
+    "doge": 2,
     "cardano": 1,
-    "xlayer": 3,
+    "xlayer": 2,
     "aptos": 1,
     "dash": 1,
-    "doge": 1,
     "plasma": 1,
-    "bch": 2,
+    "bch": 1,
     "monad": 1,
     "starknet": 1
   },
@@ -44,13 +44,20 @@
     "unread": 0
   },
   "provenByChain": {
-    "base": 16,
-    "sol": 22,
-    "tron": 29,
+    "arb": 8,
+    "tron": 41,
+    "base": 12,
     "eth": 22,
-    "arb": 6,
-    "hood": 2,
-    "pol": 2
+    "sol": 16
+  },
+  "statusMix": {
+    "sampled": 1000,
+    "counts": {
+      "SUCCESS": 965,
+      "PROCESSING": 9,
+      "FAILED": 2,
+      "REFUNDED": 24
+    }
   },
   "notes": [
     "Readable means the destination chain is one Quittance reads. Proven means the payout was read on that chain and matched the quoted recipient.",
