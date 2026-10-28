@@ -84,6 +84,9 @@ export default function Home() {
           >
             Repository
           </a>
+          <Link className="px-2 text-muted transition-colors hover:text-fg sm:px-3" href="/docs">
+            Docs
+          </Link>
           <ThemeToggle />
           <Link
             href="/check"
@@ -111,8 +114,8 @@ export default function Home() {
             className="reveal mt-7 max-w-lg text-lg leading-relaxed text-muted"
             style={{ animationDelay: "0.14s" }}
           >
-            Paste a transaction hash. Get back what actually happened to the swap, with the proof
-            attached.
+            Paste a transaction hash, a deposit address or your wallet. Get back what actually
+            happened to the swap, with both ends proven on their own chains.
           </p>
           <div className="reveal mt-10 flex flex-wrap items-center gap-3" style={{ animationDelay: "0.2s" }}>
             <Link

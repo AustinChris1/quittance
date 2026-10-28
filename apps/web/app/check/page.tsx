@@ -210,6 +210,9 @@ export default function CheckPage() {
           <Wordmark />
         </Link>
         <div className="flex items-center gap-3">
+          <Link href="/docs" className="px-2 text-sm text-muted transition-colors hover:text-fg">
+            Docs
+          </Link>
           <ThemeToggle />
           <Link
             href="/"
