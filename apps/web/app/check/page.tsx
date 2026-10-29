@@ -27,6 +27,7 @@ import { TallyMark, Wordmark } from "../../components/logo";
 import { ThemeToggle } from "../../components/theme";
 import { ChainLogo, chainFor, type ChainName } from "../../components/chains";
 import { TwoEnds, type Proof } from "../../components/two-ends";
+import { WatchPanel } from "../../components/watch-panel";
 
 type Verdict = {
   label: string;
@@ -110,7 +111,7 @@ export default function CheckPage() {
   const [query, setQuery] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<{ receipt: Receipt; inputKind: string; swaps?: Swap[] } | null>(null);
+  const [result, setResult] = useState<{ receipt: Receipt; inputKind: string; swaps?: Swap[]; q: string } | null>(null);
   const [copied, setCopied] = useState<"link" | "markdown" | null>(null);
   const reduced = useReducedMotion();
   const ran = useRef(false);
@@ -146,7 +147,7 @@ export default function CheckPage() {
       if (!res.ok) {
         setError(typeof body.error === "string" ? body.error : "That lookup did not work.");
       } else {
-        setResult({ receipt: body.receipt as Receipt, inputKind: body.inputKind as string, swaps: body.swaps as Swap[] | undefined });
+        setResult({ receipt: body.receipt as Receipt, inputKind: body.inputKind as string, swaps: body.swaps as Swap[] | undefined, q: trimmed });
         window.history.replaceState(null, "", `/check?q=${encodeURIComponent(trimmed)}`);
       }
     } catch {
@@ -213,6 +214,10 @@ export default function CheckPage() {
   const tone = result ? (TONE[result.receipt.verdict.label] ?? TONE.UNDETERMINED!) : null;
   const ev = result?.receipt.evidence;
   const showEnds = Boolean(ev && (ev.origin || ev.delivery || ev.deliveryUnreadable));
+  // A proven delivery or a refund is the end of the story, so there is nothing to watch.
+  const final = Boolean(
+    result && (result.receipt.verdict.label === "REFUNDED_OK" || (result.receipt.verdict.label === "DELIVERED" && ev?.delivery?.verified)),
+  );
   const privateMiddle = Boolean(result?.receipt.verdict.limits.some((l) => l.includes("NEAR Private Shard")));
   const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -418,6 +423,8 @@ export default function CheckPage() {
                   privateMiddle={privateMiddle}
                 />
               ) : null}
+
+              {!result.swaps && !final ? <WatchPanel query={result.q} /> : null}
 
               {result.swaps && result.swaps.length > 0 ? (
                 <ul className="mt-8 grid gap-3">

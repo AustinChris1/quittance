@@ -7,6 +7,7 @@ import { buildReceipt, canonicalJson, renderText, verifyReceipt } from "../src/r
 import type { Evidence } from "../src/types.ts";
 import { LABELS } from "../src/labels.ts";
 import { tronToHex } from "../src/sources/tron.ts";
+import { evidenceState, isFinal, describeChange } from "../src/watch.ts";
 
 const FIXTURE_DIR = join(import.meta.dirname, "../../../fixtures");
 
@@ -172,4 +173,20 @@ test("a forger who recomputes the fingerprint passes the self-check, so only a t
   forged.fingerprint = verifyReceipt(forged).expected;
   assert.ok(verifyReceipt(forged).intact, "a re-fingerprinted forgery is self-consistent, which is why the CLI never calls that tamper-proof");
   assert.notEqual(verifyReceipt(forged).expected, trusted, "against a fingerprint obtained separately, the forgery shows");
+});
+
+test("a watcher keys on the evidence, not on when it was read", () => {
+  const byId = (id: string) => fixtures.find((f) => f.case.id === id)!;
+  const delivered = byId("01-reported-stranded-actually-delivered").evidence;
+  const first = buildReceipt(delivered, "2026-11-01T00:00:00.000Z");
+  const later = buildReceipt({ ...delivered, fetchedAt: "2026-11-02T00:00:00.000Z" }, "2026-11-02T00:00:00.000Z");
+  assert.equal(evidenceState(first), evidenceState(later), "a re-read with the same evidence must not notify");
+  assert.notEqual(first.fingerprint, later.fingerprint, "the full fingerprint does move with the read time");
+
+  const inFlight = buildReceipt(byId("09-btc-refund-address-set").evidence);
+  assert.notEqual(evidenceState(inFlight), evidenceState(first), "a real change of verdict must notify");
+  assert.ok(isFinal(first), "a proven delivery ends the watch");
+  assert.ok(!isFinal(inFlight), "a swap still moving keeps being watched");
+  assert.ok(!isFinal(buildReceipt(byId("11-shielded-confidential-0038").evidence)), "a shield stays watched until the user stops");
+  assert.equal(describeChange("IN_FLIGHT", first).title, "IN FLIGHT is now DELIVERED");
 });

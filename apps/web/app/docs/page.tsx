@@ -53,6 +53,7 @@ const SECTIONS: DocSection[] = [
     { id: "sharing", title: "Sharing a receipt" },
     { id: "cli", title: "Command line" },
     { id: "api", title: "HTTP API" },
+    { id: "watch", title: "Watch a swap" },
     { id: "webhook", title: "Webhook" },
   ] },
   { id: "architecture", title: "Architecture", children: [
@@ -711,6 +712,29 @@ node apps/cli/src/main.ts study --save`}</Code>
 }`}</Code>
             <P>When the input is a wallet, <M>swaps</M> lists the swaps it appears in, each with its deposit address to check next.</P>
 
+            <H3 id="watch">Watch a swap</H3>
+            <P>
+              A swap that is still moving, or shielded, can be watched from its receipt. Press <strong className="text-fg">Watch</strong>, allow
+              notifications, and Quittance alerts you once when the evidence changes, such as <M>IN FLIGHT is now DELIVERED</M>, with a link
+              back to the receipt. No account and no email: the browser&apos;s push subscription is the only identity.
+            </P>
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              {[
+                { Icon: ShieldCheck, t: "The server rechecks", d: "Every 15 minutes Quittance runs the same check the page runs. A phone cannot poll chains in the background, so the browser only displays the alert." },
+                { Icon: Fingerprint, t: "One alert per change", d: "It keys on the evidence and the verdict, not on read times, so a recheck that finds nothing new stays silent." },
+                { Icon: Timer, t: "It stops", d: "A proven delivery or a refund ends the watch. Otherwise it ends after the 3 to 30 days you chose. Dropped subscriptions are pruned." },
+                { Icon: Wallet, t: "It installs", d: "Quittance is an installable app. On iPhone and iPad, alerts reach Home Screen apps only, so the panel tells you to add it there first." },
+              ].map((c) => (
+                <div key={c.t} className="flex gap-4 rounded-[1.5rem] border border-line bg-surface p-5">
+                  <c.Icon size={21} className="mt-0.5 shrink-0 text-mint-ink" />
+                  <div>
+                    <p className="font-bold">{c.t}</p>
+                    <p className="mt-1.5 text-sm leading-relaxed text-muted">{c.d}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
             <H3 id="webhook">Webhook</H3>
             <P>
               The one write Quittance makes is posting a receipt to an endpoint you control, signed with HMAC SHA256 so the receiver can reject
@@ -852,6 +876,7 @@ packages/core/src/receipt.ts       canonical JSON, sha256 fingerprint, text form
 packages/core/src/sources/         1Click, Explorer, NearBlocks, NEAR RPC,
                                    EVM, TRON, Solana, token list
 packages/core/src/coverage.ts      how many real payouts can be proven
+packages/core/src/watch.ts         what a watcher compares between two checks
 packages/core/src/study.ts         the stuck tail, aggregates only
 apps/web                           the site, the checker, these docs, the API
 apps/cli                           check, replay, verify, rules, study, coverage, receipt

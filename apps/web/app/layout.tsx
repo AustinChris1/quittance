@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Mona_Sans } from "next/font/google";
 import { ThemeProvider } from "../components/theme";
+import { PwaRegister } from "../components/pwa";
 import "./globals.css";
 
 // Mona Sans is the face near.org itself uses. The width axis drives the wide display setting.
@@ -50,6 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${mona.variable} ${mono.variable}`} suppressHydrationWarning>
       <body className="min-h-dvh antialiased">
         <ThemeProvider>{children}</ThemeProvider>
+        <PwaRegister />
       </body>
     </html>
   );

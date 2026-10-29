@@ -1,0 +1,24 @@
+name: watch
+
+# Rechecks watched swaps. Vercel's free plan runs schedules once a day, so the schedule lives here.
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+jobs:
+  recheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Recheck watched swaps
+        env:
+          WATCH_CRON_SECRET: ${{ secrets.WATCH_CRON_SECRET }}
+        run: |
+          if [ -z "$WATCH_CRON_SECRET" ]; then
+            echo "WATCH_CRON_SECRET is not set, so there is nothing to run yet."
+            exit 0
+          fi
+          curl -fsS --max-time 90 -X POST \
+            -H "Authorization: Bearer $WATCH_CRON_SECRET" \
+            https://quittance-five.vercel.app/api/watch/run

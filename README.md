@@ -236,6 +236,31 @@ node apps/cli/src/main.ts receipt receipt.json --expect <fingerprint>
 That reports `MATCHES` or `MISMATCH`. Either way the fingerprint covers the file, not the truth of its
 claims; the explorer links are how anyone checks those against the chains.
 
+## Watch a swap
+
+A swap that is still moving, or shielded, can be watched. On its receipt, **Watch** asks for
+notification permission, and Quittance alerts you once when the evidence changes: for example
+`IN FLIGHT is now DELIVERED`, with the new one-line summary and a link back to the receipt. The
+forum case above would have been answered the day the payout landed, not twelve days later.
+
+How it stays honest:
+
+- **The server rechecks, the browser only displays.** A phone cannot keep polling TRON and
+  Ethereum in the background. Every 15 minutes a scheduled job calls `/api/watch/run`, which runs
+  the same check the page runs. The service worker only shows what it is sent.
+- **One alert per change.** It keys on the evidence and the verdict, not on when they were read,
+  so a recheck that finds nothing new sends nothing. A test asserts both halves.
+- **It stops.** A proven delivery or a refund ends the watch. Otherwise it ends at the period you
+  chose, 3 to 30 days. A subscription the browser has dropped is pruned, not retried.
+- **One lookup per swap.** Everyone watching the same swap shares one recheck, so a popular swap
+  does not multiply calls against the Explorer's rate limit.
+- **No account.** The push subscription is the identity. The watch list lives on the server in a
+  private store, never in a public file.
+
+It installs as an app too. iPhones and iPads only deliver web notifications to apps on the Home
+Screen, so the panel says so there; Chrome and Edge offer **Install app** directly. **Send a test**
+shows what an alert looks like before anything changes.
+
 ## Where it proves a transfer
 
 | Chain | Read |
@@ -345,6 +370,7 @@ packages/core/src/sources/        1Click status and tokens, Explorer, NearBlocks
                                   EVM, TRON, Solana
 packages/core/src/webhook.ts      the only write, HMAC signed
 packages/core/src/coverage.ts     how many real payouts can be proven
+packages/core/src/watch.ts        what a watcher compares between two checks
 packages/core/src/study.ts        the stuck tail, aggregates only
 apps/cli/src/main.ts              check, replay, cases, verify, rules, study, coverage, receipt
 apps/sink/src/main.ts             reference receiver, stands in for an integrator endpoint
