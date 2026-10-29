@@ -12,37 +12,12 @@ Everything here is ready to use on 1 November. Submissions open 1 Nov 00:00 UTC 
 
 Both links are required and the submission cannot be edited afterwards.
 
-## Demo script, about 90 seconds, one screen
+## Demo video
 
-Record the browser at `https://quittance-five.vercel.app/check`. No terminal, no slides. Paste each
-input by hand so the viewer sees it is a real lookup. Measured on production on 29 October, each
-lookup returns in 1.5 to 5 seconds, so all three fit with room to talk. Narrate one line per beat.
-
-| Time | On screen | Say |
-| --- | --- | --- |
-| 0:00 | Paste `0x9be9c2f8ed78d32ecf222bca3595d50cc42aed979030e4ebf0f84a626e13421a`, press Resolve. | "This swap was reported on the NEAR forum as a $193K loss. This is its Ethereum payout." |
-| 0:12 | DELIVERED lands. Pause on the three cards. | "575,830 TRX in, read on TRON. 190,995 USDT out, read on Ethereum. Twelve days before the complaint." |
-| 0:28 | Point at the quote line, then click **Check it yourself** on one end. | "0.40% under the quote, inside its guarantee. And anyone can check both ends on the chain's own explorer." |
-| 0:42 | Paste `0x632F5D32448DE43b8b9cfD063aCfcDac09108bad`. | "Most people only know their wallet. A wallet is not a swap, so it lists the swaps instead of guessing." |
-| 0:54 | The list appears. Click **Check it**. | "One click and it is the same receipt." |
-| 1:02 | Paste `3djtQ3pUHv8SGtNKS3CMGice7E7S9oeS4DJzNYyjCUVD`. | "This one went through NEAR's private route." |
-| 1:10 | SHIELDED_UNPROVEN lands. | "It proves the shield, and refuses to call it a delivery or a loss, because no public record can show either." |
-| 1:22 | Stop on the receipt. | "A status is a claim. A receipt is evidence." |
-
-If you cut anything for time, cut the wallet beats. Never cut the confidential case: it is the
-credibility test. Record one clean take and keep it as a backup in case the network is slow when
-judges watch the live site.
-
-The pair is the argument. The first case shows public records overturning a status word and a
-public complaint. The last shows the tool refusing to claim what it cannot see. Judges will trust
-the first more because of the last.
-
-Do not use `0xDF7A93d400159d0f8f40AAe42576d01285EA9e39`: that is a deliberately unknown address for
-demonstrating the anonymous 404, and it returns nothing. Leave the population numbers out of the
-video; they live in the README and the docs, each with its saved snapshot.
-
-The one frame that matters is 0:12. A forum thread still says that money is gone. The screen says
-it arrived on 27 September, and proves both ends on the chains themselves.
+The full production brief is [DEMO.md](DEMO.md): seven scenes, 1:40 to 2:00, with what to show,
+click and say in each, the claims you may make, and what not to film. The order is the $193K payout
+proven at both ends, the wallet that was paid, the confidential shield it refuses to over-claim, and
+a live watch alert.
 
 ## X post
 
