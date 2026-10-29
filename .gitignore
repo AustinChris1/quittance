@@ -23,3 +23,6 @@ next-env.d.ts
 # Vercel
 .vercel
 *.tsbuildinfo
+
+# Demo video project and its generated media, kept out of git.
+video/

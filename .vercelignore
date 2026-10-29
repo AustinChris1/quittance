@@ -4,3 +4,4 @@ studies/
 *.pdf
 .next/
 node_modules/
+video/
