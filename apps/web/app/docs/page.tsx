@@ -353,6 +353,17 @@ const FAQ: { q: string; a: React.ReactNode }[] = [
     ),
   },
   {
+    q: "What does proven mean, exactly?",
+    a: (
+      <>
+        Quittance read the transaction from that chain&apos;s public RPC endpoints, several per chain, and checked that its receipt
+        succeeded and that the quoted asset moved to the quoted address. That is independent evidence, read from the chain rather
+        than from the operator. It is not a trustless cryptographic proof: nothing is checked against chain state with a light client.
+        That is why every proof carries an explorer link, so you can check it yourself.
+      </>
+    ),
+  },
+  {
     q: "Do I need a key, a wallet connection or a signature?",
     a: (
       <>
@@ -428,7 +439,7 @@ export default function DocsPage() {
             <H3 id="problem">The problem</H3>
             <div className="mt-6 grid gap-3 md:grid-cols-3">
               {[
-                { Icon: CircleHelp, t: "A status word is not an answer", d: "FAILED, PROCESSING and SUCCESS are the operator's record. The most cited stuck deposit in the ecosystem read as lost and had been delivered." },
+                { Icon: CircleHelp, t: "A status word is not an answer", d: "FAILED, PROCESSING and SUCCESS are the operator's record. A $193K swap reported on the NEAR forum as lost had been delivered." },
                 { Icon: Fingerprint, t: "The handle people quote resolves nothing", d: "The correlation id in every support thread is a per-request trace. Three calls for one swap return three different ids." },
                 { Icon: EyeOff, t: "Since 27 October the middle is private", d: "1Click swaps now settle on the NEAR Private Shard. Only the deposit and the payout remain public, so those are what must be proven." },
               ].map((c) => (
@@ -650,8 +661,10 @@ export default function DocsPage() {
               the whole receipt, and every proven transfer carries a link to check it on the chain&apos;s own explorer.
             </P>
             <P>
-              Anyone can confirm a saved receipt was not altered. <M>quittance receipt receipt.json</M> recomputes the fingerprint and
-              reports <M>INTACT</M> or <M>ALTERED</M>. A match proves integrity, not truth: the links are how the claims are checked.
+              <M>quittance receipt receipt.json --expect &lt;fingerprint&gt;</M> recomputes a saved receipt&apos;s fingerprint and compares it with
+              one you obtained separately, such as the one on this page or in a ticket. Without <M>--expect</M> it only shows the file is
+              self-consistent, because whoever edits a receipt can recompute its fingerprint too. Neither proves the claims are true: the
+              explorer links are how those are checked.
             </P>
 
             <H3 id="cli">Command line</H3>

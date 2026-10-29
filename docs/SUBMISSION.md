@@ -15,19 +15,23 @@ Both links are required and the submission cannot be edited afterwards.
 ## Demo script, about 90 seconds, one screen
 
 Record the browser at `https://quittance-five.vercel.app/check`. No terminal, no slides. Paste each
-input by hand so the viewer sees it is a real lookup.
+input by hand so the viewer sees it is a real lookup. Measured on production on 29 October, each
+lookup returns in 1.5 to 5 seconds, so all three fit with room to talk. Narrate one line per beat.
 
-| Time | On screen | What it shows |
+| Time | On screen | Say |
 | --- | --- | --- |
-| 0:00 | Paste `0x9be9c2f8ed78d32ecf222bca3595d50cc42aed979030e4ebf0f84a626e13421a` and press Resolve. | The Ethereum payout of the swap the forum calls a $193K loss. |
-| 0:08 | The reading panel while it works. | Several chains consulted in turn. |
-| 0:20 | DELIVERED lands. Pause on the three cards. | Money in proven on TRON, 575,830 TRX. Money out proven on Ethereum, 190,995.29 USDT. |
-| 0:30 | Scroll to the quote line in the receipt. | 0.40% under the quote, inside its guaranteed minimum. Nobody has to trust the status word. |
-| 0:40 | Paste `0x632F5D32448DE43b8b9cfD063aCfcDac09108bad`. | The wallet that was paid. |
-| 0:50 | The list appears. Click **Check it** on the one swap. | A wallet is not a swap, so it lists rather than guesses. |
-| 1:00 | Paste `3djtQ3pUHv8SGtNKS3CMGice7E7S9oeS4DJzNYyjCUVD`. | A confidential shield with no public out. |
-| 1:12 | SHIELDED_UNPROVEN lands. | It refuses to call this a loss or a delivery, and says why. |
-| 1:25 | Stop. | |
+| 0:00 | Paste `0x9be9c2f8ed78d32ecf222bca3595d50cc42aed979030e4ebf0f84a626e13421a`, press Resolve. | "This swap was reported on the NEAR forum as a $193K loss. This is its Ethereum payout." |
+| 0:12 | DELIVERED lands. Pause on the three cards. | "575,830 TRX in, read on TRON. 190,995 USDT out, read on Ethereum. Twelve days before the complaint." |
+| 0:28 | Point at the quote line, then click **Check it yourself** on one end. | "0.40% under the quote, inside its guarantee. And anyone can check both ends on the chain's own explorer." |
+| 0:42 | Paste `0x632F5D32448DE43b8b9cfD063aCfcDac09108bad`. | "Most people only know their wallet. A wallet is not a swap, so it lists the swaps instead of guessing." |
+| 0:54 | The list appears. Click **Check it**. | "One click and it is the same receipt." |
+| 1:02 | Paste `3djtQ3pUHv8SGtNKS3CMGice7E7S9oeS4DJzNYyjCUVD`. | "This one went through NEAR's private route." |
+| 1:10 | SHIELDED_UNPROVEN lands. | "It proves the shield, and refuses to call it a delivery or a loss, because no public record can show either." |
+| 1:22 | Stop on the receipt. | "A status is a claim. A receipt is evidence." |
+
+If you cut anything for time, cut the wallet beats. Never cut the confidential case: it is the
+credibility test. Record one clean take and keep it as a backup in case the network is slow when
+judges watch the live site.
 
 The pair is the argument. The first case shows public records overturning a status word and a
 public complaint. The last shows the tool refusing to claim what it cannot see. Judges will trust
@@ -37,19 +41,20 @@ Do not use `0xDF7A93d400159d0f8f40AAe42576d01285EA9e39`: that is a deliberately 
 demonstrating the anonymous 404, and it returns nothing. Leave the population numbers out of the
 video; they live in the README and the docs, each with its saved snapshot.
 
-The one frame that matters is 0:20. A forum thread still says that money is gone. The screen says
+The one frame that matters is 0:12. A forum thread still says that money is gone. The screen says
 it arrived on 27 September, and proves both ends on the chains themselves.
 
 ## X post
 
-> Built Quittance at NEAR HACKATHON.
+> A status is a claim. A receipt is evidence.
 >
-> The most cited stuck deposit on NEAR Intents, $193K reported lost, was delivered 12 days before
-> the complaint was filed. Nobody could tell, because a status word is not an answer.
+> A $193K NEAR Intents swap was reported as failed with a zero refund. The deposit had arrived on
+> TRON, and 190,995 USDT reached the recipient on Ethereum 12 days before the complaint was filed.
 >
-> Paste a transaction hash or your wallet. Get a receipt with both ends proven on their own chains.
+> I built Quittance at NEAR HACKATHON to read both ends of a cross-chain swap on their own chains,
+> and to say plainly what public records cannot show.
 >
-> quittance-five.vercel.app
+> Try it: quittance-five.vercel.app
 
 Attach the demo video. Keep the repo link in a reply rather than the main post, so the video
 carries the first impression.
@@ -57,7 +62,7 @@ carries the first impression.
 ## Form answers
 
 - **Project name:** Quittance
-- **Tracks:** Unstoppable DeFi, Real-World Money, Privacy and Private AI, Open Innovation
+- **Tracks:** Open Innovation, Unstoppable DeFi, Privacy and Private AI. Real-World Money is the weakest fit; add it only if you want the payment-proof use case judged there.
 - **Repository:** https://github.com/AustinChris1/quittance
 - **Description, 20 to 2000 characters:**
 
@@ -90,8 +95,11 @@ carries the first impression.
 > money. Seventeen frozen cases, each with provenance, are re-classified on every test run. Run
 > `node apps/cli/src/main.ts verify` to check the labels yourself.
 
-## Honesty note to keep in the README
+## Development timeline
 
-The research and a working prototype predate the 1 to 14 November window. Decide whether to state
-that plainly in the README or to leave the commit history to speak for itself. Two of the judges
-read repositories.
+The rules on nearhackathon.com say "Code written since the announcement counts". The README carries
+the dates so nobody has to infer them:
+
+- 19 October 2026: the hackathon is announced.
+- 26 October 2026: first commit. Everything in the repository was written from this date on.
+- 1 to 14 November 2026: the submission window.

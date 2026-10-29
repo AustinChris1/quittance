@@ -93,8 +93,9 @@ export function buildReceipt(evidence: Evidence, generatedAt = new Date().toISOS
 }
 
 /**
- * Recomputes a saved receipt's fingerprint. A match proves the file is unchanged since it was
- * made, not that its claims are true: those are checked against the chains, by the links inside.
+ * Recomputes a saved receipt's fingerprint. A match against the fingerprint stored in the same file
+ * only shows the file is self-consistent, since an editor can recompute it; tampering is detected by
+ * comparing with a fingerprint obtained separately. Neither proves the claims, which the links check.
  */
 export function verifyReceipt(receipt: Receipt): { intact: boolean; expected: string; recorded: string } {
   const { input, verdict, evidence, sources } = receipt;

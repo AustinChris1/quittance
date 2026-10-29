@@ -142,16 +142,31 @@ function cmdReceipt(args: Args): void {
   }
   const receipt = JSON.parse(readFileSync(isAbsolute(file) ? file : join(process.cwd(), file), "utf8")) as Receipt;
   const result = verifyReceipt(receipt);
+  // The fingerprint inside the file can be recomputed by whoever edits it, so only an outside copy is a check against tampering.
+  const trusted = flagString(args.flags, "expect")?.toLowerCase();
   console.log(`label        ${receipt.verdict.label}`);
   console.log(`recorded     ${result.recorded}`);
   console.log(`recomputed   ${result.expected}`);
-  console.log(result.intact ? "INTACT       the evidence and verdict are unchanged since the receipt was made" : "ALTERED      the evidence or verdict was changed after the receipt was made");
+  if (trusted) console.log(`trusted      ${trusted}`);
+  let ok = result.intact;
+  if (!result.intact) {
+    console.log("INCONSISTENT the contents do not match the fingerprint recorded in the file, so it was edited after it was made");
+  } else if (trusted) {
+    ok = trusted === result.expected;
+    console.log(ok ? "MATCHES      the contents match the fingerprint you trust, so they are unchanged since then" : "MISMATCH     the contents differ from the fingerprint you trust");
+  } else {
+    console.log("CONSISTENT   the contents match the fingerprint recorded in the file");
+  }
   for (const p of [receipt.evidence.origin, receipt.evidence.delivery]) {
     const url = p ? (p.explorerUrl ?? txUrl(p.chain, p.tx)) : undefined;
     if (url) console.log(`check        ${url}`);
   }
-  console.log("\nA matching fingerprint proves integrity, not truth. Open the links to check the chains yourself.");
-  if (!result.intact) process.exitCode = 2;
+  console.log(
+    trusted
+      ? "\nA match proves the file is the one you were given a fingerprint for, not that its claims are true. Open the links to check the chains."
+      : "\nAnyone who edits the file can also recompute its fingerprint. To detect tampering, pass --expect with a fingerprint you obtained separately, such as the one shown on the checker or in a ticket. Open the links to check the claims themselves.",
+  );
+  if (!ok) process.exitCode = 2;
 }
 
 function cmdCases(): void {
@@ -246,7 +261,7 @@ function cmdHelp(): void {
   quittance cases
   quittance study [--save]
   quittance coverage [--check <n>] [--save]
-  quittance receipt <receipt.json>
+  quittance receipt <receipt.json> [--expect <fingerprint>]
   quittance verify
   quittance rules
 

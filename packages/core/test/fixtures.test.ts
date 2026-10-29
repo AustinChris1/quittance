@@ -162,3 +162,14 @@ test("a saved receipt verifies intact, and any edit to it is caught", () => {
     assert.ok(!verifyReceipt(copy).intact, `${fixture.case.id} edit went unnoticed`);
   }
 });
+
+test("a forger who recomputes the fingerprint passes the self-check, so only a trusted fingerprint catches them", () => {
+  const fixture = fixtures.find((f) => f.case.id === "01-reported-stranded-actually-delivered")!;
+  const receipt = buildReceipt(fixture.evidence, "2026-11-01T00:00:00.000Z");
+  const trusted = receipt.fingerprint;
+  const forged = JSON.parse(JSON.stringify(receipt));
+  forged.evidence.delivery.deliveredFormatted = "1.000000";
+  forged.fingerprint = verifyReceipt(forged).expected;
+  assert.ok(verifyReceipt(forged).intact, "a re-fingerprinted forgery is self-consistent, which is why the CLI never calls that tamper-proof");
+  assert.notEqual(verifyReceipt(forged).expected, trusted, "against a fingerprint obtained separately, the forgery shows");
+});

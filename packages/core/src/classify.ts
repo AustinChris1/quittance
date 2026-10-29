@@ -4,7 +4,7 @@ import { LABEL_HEADLINE, type Verdict, type Label } from "./labels.ts";
 import { formatUnits } from "./sources/http.ts";
 
 const ALWAYS_LIMIT =
-  "Public data only. Solver internal state and private shard balances are not visible.";
+  "Public data only, read from public RPC endpoints and indexers rather than checked against chain state with a light client. Solver internal state and private shard balances are not visible.";
 
 // Quoted from docs.near-intents.org/integration/market-makers/confidential-intents, read 2026-10-27.
 const FAR_LIMIT =

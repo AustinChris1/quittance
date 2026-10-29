@@ -17,8 +17,8 @@ A quittance is an old legal word for a written receipt proving an obligation has
 
 ## What it found on its first real case
 
-The most cited stuck deposit in the ecosystem, 575,830 TRX reported on the NEAR forum as roughly
-193,000 dollars lost, had already been delivered when the complaint was filed.
+A stuck deposit reported on the NEAR forum, 575,830 TRX or roughly 193,000 dollars said to be lost,
+had already been delivered when the complaint was filed.
 
 | When | What | Verified against |
 | --- | --- | --- |
@@ -221,10 +221,20 @@ node apps/cli/src/main.ts replay 01-reported-stranded-actually-delivered --json 
 node apps/cli/src/main.ts receipt receipt.json
 ```
 
-Expect `INTACT` and the two explorer links, TRON and Ethereum, to check by hand. Edit any value in
-the file and run it again: it reports `ALTERED`. The checker's **Download JSON** button saves the
-same file. A matching fingerprint proves the receipt is unchanged since it was made, not that its
-claims are true; the links are how anyone checks those against the chains.
+Expect `CONSISTENT` and the two explorer links, TRON and Ethereum, to check by hand. Edit any value
+in the file and run it again: it reports `INCONSISTENT`. The checker's **Download JSON** button saves
+the same file.
+
+Be precise about what that shows. Whoever edits a receipt can also recompute the fingerprint inside
+it, so a consistent file is not by itself tamper-proof. To detect tampering, compare against a
+fingerprint obtained separately, for example the one on the checker's page or in a support ticket:
+
+```
+node apps/cli/src/main.ts receipt receipt.json --expect <fingerprint>
+```
+
+That reports `MATCHES` or `MISMATCH`. Either way the fingerprint covers the file, not the truth of its
+claims; the explorer links are how anyone checks those against the chains.
 
 ## Where it proves a transfer
 
@@ -234,6 +244,12 @@ claims are true; the links are how anyone checks those against the chains.
 | TRON | TRC20 Transfer logs, and TRX transfers |
 | Solana | Token balance changes by mint and owner, and lamport changes for SOL |
 | NEAR | Credits to `intents.near`, and transfers inside signed intents |
+
+"Proven" has a precise meaning. Quittance reads the transaction from the chain's public RPC
+endpoints, several per chain, and checks that its receipt succeeded and that the quoted asset moved
+to the quoted address. That is independent evidence, read from the chain rather than from the
+operator. It is not a trustless cryptographic proof: nothing is checked against chain state with a
+light client, which is why every proof also carries an explorer link anyone can open.
 
 Each asset's chain, contract and decimals come from the public 1Click token list, so nothing is
 guessed from an asset id. A chain that answers and does not show the transfer is a contradiction.
@@ -339,6 +355,18 @@ fixtures/                         frozen cases with provenance
 
 Receipts are fingerprinted with a sha256 over canonical JSON, so two runs over the same evidence
 produce the same fingerprint and any change to the evidence changes it.
+
+## Development timeline
+
+The rules on nearhackathon.com say "Code written since the announcement counts".
+
+| Date | Event |
+| --- | --- |
+| 19 October 2026 | The hackathon is announced. |
+| 26 October 2026 | First commit. Everything in this repository was written from this date on. |
+| 1 to 14 November 2026 | The submission window. |
+
+The commit history carries the rest, one working step per commit.
 
 ## Brand
 
