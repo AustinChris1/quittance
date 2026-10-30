@@ -2,18 +2,24 @@
 
 [![ci](https://github.com/AustinChris1/quittance/actions/workflows/ci.yml/badge.svg)](https://github.com/AustinChris1/quittance/actions/workflows/ci.yml)
 
-A receipt for money that crossed chains.
+![Quittance: both ends of a NEAR Intents swap, proven on the chains they happened on](brand/social-card-1200x630.png)
 
-Paste a transaction hash from any chain a NEAR Intents swap touched, the deposit address its quote
-issued, or the wallet that sent or received it. Quittance reads public records only, proves the
-deposit and the payout on the chains they happened on, and returns one of eight labels with the
-facts it observed, the limits of what it can see, and the next step. It holds no keys, moves no
-funds, and opens no support tickets.
+**A receipt for money that crossed chains.** When a NEAR Intents swap says `FAILED`, or says
+`SUCCESS` and nothing seems to arrive, the status word is all anyone has. Quittance replaces it with
+evidence.
+
+Paste a transaction hash from any chain the swap touched, the deposit address its quote issued, or
+the wallet that sent or received it. Quittance reads public records only, proves the deposit and the
+payout on the chains they happened on, and returns one of eight labels with the facts it observed,
+the limits of what it can see, and the next step. It holds no keys, moves no funds, and opens no
+support tickets.
 
 A quittance is an old legal word for a written receipt proving an obligation has been discharged.
 
-- Live: https://quittance-five.vercel.app
-- Docs: https://quittance-five.vercel.app/docs
+- **Try it:** https://quittance-five.vercel.app
+- **Docs:** https://quittance-five.vercel.app/docs
+- **Submission summary, one page:** [docs/SUBMISSION.md](docs/SUBMISSION.md)
+- **Check it in a minute, no install or keys:** `node apps/cli/src/main.ts verify`, then [Run it](#run-it)
 
 ## What it found on its first real case
 
@@ -398,8 +404,8 @@ The commit history carries the rest, one working step per commit.
 
 The mark is a split tally: a debt notched across a stick, split so each party held half, proven
 discharged when the halves matched, which is how Quittance matches a swap's deposit to its
-delivery. The kit, with marks, icons, lockups, the social card and the X banner, is in
-[`brand/`](brand/README.md).
+delivery. The kit, with marks, icons, lockups, the social card, the X banner and the launch
+thread's images, is in [`brand/`](brand/README.md), and `node brand/build.mjs` rebuilds all of it.
 
 ## Built for
 

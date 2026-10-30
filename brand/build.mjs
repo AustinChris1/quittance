@@ -68,7 +68,7 @@ const page = (w, h, css, body) => `<!doctype html><html><head><meta charset="utf
 const inlineMark = (px, left, right) => `<svg width="${px}" height="${px}" viewBox="0 0 32 32" fill="none">${markPaths(left, right)}</svg>`;
 const lockup = (markPx, textPx, color, left, right) => `<div style="display:flex;align-items:center;gap:${Math.round(markPx * 0.38)}px">${inlineMark(markPx, left, right)}<span class="word" style="font-size:${textPx}px;color:${color};line-height:1">Quittance</span></div>`;
 
-const ends = (scale = 1) => {
+const ends = (scale = 1, inAmt = "575,830 TRX", inState = "Proven on TRON", outAmt = "190,995.29 USDT", outState = "Proven on Ethereum") => {
   const card = (title, logo, amount, state, mint) => `<div style="flex:1;border-radius:${22 * scale}px;padding:${18 * scale}px ${20 * scale}px;${mint ? `background:${C.mint};color:#000` : `background:#121212;color:#fff`}">
     <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:${11 * scale}px;font-weight:650;letter-spacing:0.14em;text-transform:uppercase;opacity:${mint ? 0.65 : 0.5}">${title}</span>
     <span style="width:${34 * scale}px;height:${34 * scale}px;border-radius:${10 * scale}px;background:#fff;display:flex;align-items:center;justify-content:center">${logo}</span></div>
@@ -76,8 +76,8 @@ const ends = (scale = 1) => {
     <div style="font-size:${13 * scale}px;font-weight:600;margin-top:${6 * scale}px;opacity:${mint ? 1 : 0.6}">${state}</div></div>`;
   const arrow = `<span style="color:#757575;font-size:${18 * scale}px;align-self:center">→</span>`;
   const img = (f) => `<img src="${chain(f)}" width="${21 * scale}" height="${21 * scale}">`;
-  const eye = `<svg width="${18 * scale}" height="${18 * scale}" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-opacity=".7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></svg>`;
-  return `<div style="display:flex;gap:${10 * scale}px">${card("Money in", img("tron"), "575,830 TRX", "Proven on TRON", true)}${arrow}${card("The exchange", eye, "Private shard", "Named, never painted as proven", false)}${arrow}${card("Money out", img("ethereum"), "190,995.29 USDT", "Proven on Ethereum", true)}</div>`;
+  // The $193K swap settled in September, before the confidential switch, so its middle is NEAR Intents.
+  return `<div style="display:flex;gap:${10 * scale}px">${card("Money in", img("tron"), inAmt, inState, true)}${arrow}${card("The exchange", img("near"), "NEAR Intents", "Settled between the two ends", false)}${arrow}${card("Money out", img("ethereum"), outAmt, outState, true)}</div>`;
 };
 
 const glow = (x, y, r) => `<div style="position:absolute;left:${x}px;top:${y}px;width:${r}px;height:${r}px;border-radius:50%;background:radial-gradient(circle, rgba(0,236,151,0.16), rgba(0,236,151,0) 70%)"></div>`;
@@ -121,6 +121,97 @@ ASSETS.push({
       <div class="mono" style="font-size:16px;color:${C.muted};margin-top:22px">quittance-five.vercel.app</div>
     </div>`),
 });
+
+/* ---------- the launch thread on X: four 16:9 images, every figure from the README ---------- */
+const TW = 1600;
+const TH = 900;
+const chip = (text, bg, fg) => `<span class="mono" style="font-size:19px;font-weight:500;padding:9px 16px;border-radius:999px;background:${bg};color:${fg};white-space:nowrap">${text}</span>`;
+const frame = (n, body) =>
+  page(TW, TH, `body{background:#000;color:#fff;position:relative}`, `
+    ${glow(1080, -380, 900)}${rosetteImg(760, 1110, -250, 0.32)}
+    <div style="position:absolute;left:80px;top:64px">${lockup(38, 30, C.white, C.white, C.mint)}</div>
+    <div class="mono" style="position:absolute;right:80px;top:74px;font-size:20px;color:${C.muted}">${n}/4</div>
+    ${body}
+    <div class="mono" style="position:absolute;left:80px;bottom:56px;font-size:20px;color:${C.muted}">quittance-five.vercel.app</div>
+    <div class="mono" style="position:absolute;right:80px;bottom:56px;font-size:20px;color:${C.muted}">Built at NEAR HACKATHON</div>`);
+const stop = (x, date, title, detail, color) => `<div style="position:absolute;left:${x}px;top:0;transform:translateX(-50%);text-align:center;width:360px">
+    <div style="width:22px;height:22px;border-radius:50%;background:${color};margin:0 auto"></div>
+    <div class="mono" style="font-size:19px;color:${C.muted};margin-top:18px">${date}</div>
+    <div style="font-size:28px;font-weight:700;margin-top:6px">${title}</div>
+    <div class="mono" style="font-size:18px;color:${C.muted};margin-top:6px">${detail}</div></div>`;
+const THREAD = [];
+THREAD.push({
+  name: "thread/1-reported-lost-already-paid.png",
+  html: frame(1, `
+    <div style="position:absolute;left:80px;top:150px;width:1180px;border-left:5px solid #ff7966;background:#121212;border-radius:0 16px 16px 0;padding:24px 30px">
+      <div class="mono" style="font-size:18px;color:#ff7966;letter-spacing:0.08em">THE NEAR FORUM · 9 OCT 2026</div>
+      <div style="font-size:30px;font-weight:600;margin-top:10px;line-height:1.3">“Failed NEAR Intents 1-Click swap: 575,830 TRX (~$193K) stuck, FAILED status, zero refund, no support response”</div>
+    </div>
+    <div class="display" style="position:absolute;left:80px;top:360px;font-size:100px">It had already been paid.<br><span style="color:${C.mint}">12 days before the post.</span></div>
+    <div style="position:absolute;left:250px;right:250px;top:640px;height:3px;background:#3a3a3a"></div>
+    <div style="position:absolute;left:0;right:0;top:630px">
+      ${stop(250, "11 Sep 2026", "Deposit", "575,830 TRX · TRON", C.mint)}
+      ${stop(800, "27 Sep 2026", "Payout", "190,995.29 USDT · Ethereum", C.mint)}
+      ${stop(1350, "9 Oct 2026", "Forum post", "“stuck, zero refund”", "#ff7966")}
+    </div>`),
+});
+THREAD.push({
+  name: "thread/2-both-ends-proven.png",
+  html: frame(2, `
+    <div style="position:absolute;left:80px;top:150px;width:1300px">
+      <div class="display" style="font-size:76px">Both ends, proven on<br>the chains they happened on.</div>
+      <div style="font-size:25px;color:${C.muted};margin-top:20px;line-height:1.4;max-width:1180px">Paste a transaction hash, a deposit address or a wallet. Quittance reads the deposit where it landed and the payout where it arrived, then checks what arrived against the quote.</div>
+    </div>
+    <div style="position:absolute;left:80px;right:80px;top:420px">${ends(1.55, "575,830 TRX", "Proven on TRON · block 86,157,305", "190,995.29 USDT", "Proven on Ethereum · block 26,068,435")}</div>
+    <div class="mono" style="position:absolute;left:80px;top:652px;font-size:20px;color:${C.muted}">Quote 191,757.90 USDT, guaranteed minimum 189,840.32. Arrived 0.40% under the quote, inside the guarantee.</div>
+    <div style="position:absolute;left:80px;right:80px;top:700px;display:flex;flex-wrap:wrap;gap:10px">
+      ${chip("DELIVERED", C.mint, "#000")}${chip("REFUNDED_OK", C.mint, "#000")}${chip("IN_FLIGHT", "#262626", "#fff")}${chip("STRANDED", "#ff7966", "#000")}${chip("WRONG_DOOR", "#ff7966", "#000")}${chip("LOCKED_OUT", "#ff7966", "#000")}${chip("SHIELDED_UNPROVEN", "#9797ff", "#000")}${chip("UNDETERMINED", "#262626", "#fff")}
+    </div>`),
+});
+const zone = (title, sub, line, style) => `<div style="flex:1;border-radius:24px;padding:30px 32px;${style}">
+    <div style="font-size:34px;font-weight:720;font-variation-settings:'wdth' 110;letter-spacing:-0.02em">${title}</div>
+    <div class="mono" style="font-size:18px;letter-spacing:0.1em;margin-top:8px;opacity:0.75">${sub}</div>
+    <div style="font-size:22px;font-weight:600;margin-top:22px;line-height:1.3">${line}</div></div>`;
+THREAD.push({
+  name: "thread/3-the-private-middle.png",
+  html: frame(3, `
+    <div class="display" style="position:absolute;left:80px;top:160px;font-size:74px;width:1500px">Since 27 Oct, the middle is private.<br><span style="color:${C.mint}">The two ends are not.</span></div>
+    <div style="position:absolute;left:80px;right:80px;top:410px;display:flex;gap:18px;align-items:stretch">
+      ${zone("Origin chain", "PUBLIC", "The deposit, proven", `background:${C.mint};color:#000`)}
+      ${zone("NEAR Private Shard", "CONFIDENTIAL", "Named, never painted as proven", "background:rgba(151,151,255,0.18);border:2px solid #9797ff;color:#fff")}
+      ${zone("Destination chain", "PUBLIC", "The payout, proven", `background:${C.mint};color:#000`)}
+    </div>
+    <div style="position:absolute;left:80px;right:80px;top:640px;background:${C.paper};color:#111;border-radius:18px;padding:24px 30px;display:flex;gap:26px;align-items:center">
+      ${chip("SHIELDED_UNPROVEN", "#9797ff", "#000")}
+      <div><div style="font-size:25px;font-weight:600;line-height:1.3">This proves the money was shielded. It does not prove it was delivered, and it does not prove it was lost.</div>
+      <div class="mono" style="font-size:17px;color:#5d5d63;margin-top:8px">A real case: 0.038 ETH on Robinhood Chain, 23 Sep 2026. No public index has a record of it.</div></div>
+    </div>`),
+});
+const stat = (big, label, src) => `<div style="flex:1"><div class="figure" style="font-size:104px;line-height:1">${big}</div>
+    <div style="font-size:26px;font-weight:600;margin-top:14px;line-height:1.3">${label}</div>
+    <div class="mono" style="font-size:17px;color:${C.muted};margin-top:10px">${src}</div></div>`;
+THREAD.push({
+  name: "thread/4-measured-and-try-it.png",
+  html: frame(4, `
+    <div class="display" style="position:absolute;left:80px;top:150px;font-size:76px">Measured on real swaps.</div>
+    <div style="position:absolute;left:80px;right:80px;top:265px;display:flex;gap:56px">
+      ${stat("81.8%", "of external payouts land on a chain it reads", "1,000 recent swaps · 28 Oct 2026")}
+      ${stat("99<span style='font-size:56px'> of 100</span>", "sampled payouts proven on their own chain", "none contradicted")}
+      ${stat("44", "swaps took a deposit and sent nothing back, median 255 days", "$334K quoted, not a realised loss · 26 Oct 2026")}
+    </div>
+    <div style="position:absolute;left:80px;top:556px;display:flex;gap:10px;align-items:center">
+      ${["ethereum", "base", "arbitrum", "optimism", "polygon", "bnb", "gnosis", "avalanche", "robinhood", "tron", "solana"].map((f) => `<span style="width:52px;height:52px;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center"><img src="${chain(f)}" width="30" height="30"></span>`).join("")}
+      <span style="font-size:22px;color:${C.muted};margin-left:12px">11 chains read</span>
+    </div>
+    <div style="position:absolute;left:80px;top:642px;font-size:26px;font-weight:600;color:#e6e6ea">No wallet to connect. Nothing to sign. No funds held. Watch a swap and get an alert when its evidence changes.</div>
+    <div style="position:absolute;left:80px;top:700px;display:flex;gap:16px;align-items:center">
+      <span style="font-size:28px;font-weight:700;padding:14px 26px;border-radius:999px;background:${C.mint};color:#000">Check a swap → quittance-five.vercel.app</span>
+      <span class="mono" style="font-size:20px;color:${C.muted}">github.com/AustinChris1/quittance</span>
+    </div>`),
+});
+for (const a of THREAD) ASSETS.push({ ...a, w: TW, h: TH, dsf: 2 });
+mkdirSync(join(OUT, "thread"), { recursive: true });
+mkdirSync(join(TMP, "thread"), { recursive: true });
 
 const swatch = (hex, name, use, dark) => `<div style="flex:1"><div style="height:110px;border-radius:20px;background:${hex};${dark ? "" : "border:1px solid #e5e5e5"}"></div><div style="margin-top:12px;font-weight:700;font-size:17px">${name}</div><div class="mono" style="font-size:13px;color:#5c5c5c;margin-top:3px">${hex}</div><div style="font-size:13px;color:#5c5c5c;margin-top:2px">${use}</div></div>`;
 ASSETS.push({

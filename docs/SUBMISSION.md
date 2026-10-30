@@ -1,80 +1,71 @@
-# Submission kit
+# Quittance: NEAR Hackathon submission
 
-Everything here is ready to use on 1 November. Submissions open 1 Nov 00:00 UTC and close
-14 Nov 23:59 UTC, so nothing can be filed before then.
+**A receipt for money that crossed chains.** Paste any transaction hash, deposit address or wallet
+from a NEAR Intents swap. Quittance proves the deposit and the payout on the chains they happened
+on, and says plainly what public records cannot show.
 
-## Order of operations on the day
+| | |
+| --- | --- |
+| Live | https://quittance-five.vercel.app |
+| Repository | https://github.com/AustinChris1/quittance |
+| Docs | https://quittance-five.vercel.app/docs |
+| Demo | The 60 second film in the launch post on X, linked in the submission form |
+| Tracks | Open Innovation, Unstoppable DeFi, Privacy and Private AI, Real-World Money |
+| Built | 26 October to 1 November 2026, every line after the hackathon was announced |
 
-1. Make the repository public. `gh repo edit AustinChris1/quittance --visibility public`
-2. Record the demo (script below). One take, one screen, no narration needed.
-3. Post it to X with the copy below. The post must say it was built at NEAR HACKATHON.
-4. Fill the form at nearhackathon.com with the repo link and the post link.
+![Quittance](../brand/social-card-1200x630.png)
 
-Both links are required and the submission cannot be edited afterwards.
+## The problem
 
-## Demo video
+A NEAR Intents swap shows its user a status word: `PROCESSING`, `FAILED`, `SUCCESS`. When money
+seems stuck, that word is all anyone has, and nobody can look the swap up. The status endpoint
+is keyed only by deposit address. The correlation id that support threads quote identifies one HTTP
+request, not the swap; three calls for one swap returned three different ids.
 
-The full production brief is [DEMO.md](DEMO.md): seven scenes, 1:40 to 2:00, with what to show,
-click and say in each, the claims you may make, and what not to film. The order is the $193K payout
-proven at both ends, the wallet that was paid, the confidential shield it refuses to over-claim, and
-a live watch alert.
+Since 27 October, 1Click swaps settle on the NEAR Private Shard, so the status word now
+describes a step no public record can reach.
 
-## X post
+## What Quittance does
 
-> A status is a claim. A receipt is evidence.
->
-> A $193K NEAR Intents swap was reported as failed with a zero refund. The deposit had arrived on
-> TRON, and 190,995 USDT reached the recipient on Ethereum 12 days before the complaint was filed.
->
-> I built Quittance at NEAR HACKATHON to read both ends of a cross-chain swap on their own chains,
-> and to say plainly what public records cannot show.
->
-> Try it: quittance-five.vercel.app
+1. Resolves any identifier: a transaction from either chain, the deposit address, or a wallet. A
+   wallet lists its swaps instead of guessing one.
+2. Reads the deposit on the origin chain and the payout on the destination chain, from each
+   chain's own public nodes: nine EVM chains (Ethereum, Base, Arbitrum, Optimism, Polygon, BNB Chain,
+   Gnosis, Avalanche, Robinhood Chain), TRON, Solana and NEAR.
+3. Reconciles what arrived against the quote and its guaranteed minimum.
+4. Returns one of eight labels. Each receipt carries what was observed, the limits of what can be
+   seen, and the next step, and is fingerprinted with sha256 over canonical JSON.
+5. Watches a swap and sends a browser alert once, when its evidence changes.
 
-Attach the demo video. Keep the repo link in a reply rather than the main post, so the video
-carries the first impression.
+## What it found
 
-## Form answers
+- **The $193K case was not lost.** A forum post on 9 October reported 575,830 TRX as failed with
+  zero refund. Quittance proved the deposit on TRON and 190,995.293894 USDT delivered to the
+  quoted recipient on Ethereum on 27 September, 12 days before the post. That is 0.40% under the
+  quote and inside its guarantee.
+- **The tail is real.** On 26 October, 44 swaps had taken a deposit, sent nothing on and charged no
+  refund, at a median age of 255 days, holding about $334,000 of quoted notional. That is the
+  quoted value, not a realised loss.
+- **It works on real traffic.** On 28 October, 81.8% of external payouts in the last 1,000 swaps
+  were on a chain Quittance reads, and 99 of 100 sampled payouts were proven on their own chain,
+  with none contradicted.
 
-- **Project name:** Quittance
-- **Tracks:** Open Innovation, Unstoppable DeFi, Privacy and Private AI. Real-World Money is the weakest fit; add it only if you want the payment-proof use case judged there.
-- **Repository:** https://github.com/AustinChris1/quittance
-- **Description, 20 to 2000 characters:**
+## Check it yourself in a minute
 
-> Quittance answers one question: what actually happened to a NEAR Intents swap.
->
-> Paste a transaction hash from any chain the swap touched, the deposit address its quote issued,
-> or the wallet that sent or received it. Quittance proves the deposit on the origin chain and the
-> payout on the destination chain, each read from that chain, and reconciles what arrived
-> against the quote. It returns one of eight labels, each carrying the facts observed, the limits of
-> what it can see, and the next action.
->
-> That matters more since 27 October, when NEAR made 1Click swaps confidential only. The
-> exchange now settles on the NEAR Private Shard, so a status word describes a step no public
-> record can reach. The two ends stay public, and those are what Quittance proves. On 28 October,
-> 81.8 percent of external payouts were on a chain it reads, and 99 of 100 sampled payouts proved
-> on their own chain.
->
-> It was built around a case we then disproved with it. A deposit of 575,830 TRX, about $193K,
-> was reported on the NEAR forum as failed with a zero refund. It had settled: the TRX reached the
-> deposit address on TRON, and 190,995.29 USDT reached the recipient on Ethereum on 27 September,
-> twelve days before the complaint. The poster cited a refund field reading zero as proof of loss,
-> which on a settled swap is the correct value.
->
-> The rate is not the problem; the tail is. On 26 October, 44 swaps had taken a deposit, produced no
-> destination transaction and charged no refund, at a median age of 255 days, holding about $334,000
-> of quoted notional. Their owners cannot look them up: the status endpoint is keyed only by deposit
-> address, and the correlation id support threads quote identifies one HTTP request.
->
-> Quittance holds no keys, moves no funds, files nothing on anyone's behalf and claims no recovered
-> money. Seventeen frozen cases, each with provenance, are re-classified on every test run. Run
-> `node apps/cli/src/main.ts verify` to check the labels yourself.
+Node 24 or newer, no install, no keys:
 
-## Development timeline
+```
+node apps/cli/src/main.ts verify
+node apps/cli/src/main.ts check --deposit TBy2io3Q3Jt4UM4ejDhkkUQJZgZuXw2sus
+```
 
-The rules on nearhackathon.com say "Code written since the announcement counts". The README carries
-the dates so nobody has to infer them:
+The first re-classifies all 17 frozen cases and prints `labels correct 17 of 17`. The second
+reads the $193K swap live from mainnet and proves both ends. The [README](../README.md) walks
+through every other command.
 
-- 19 October 2026: the hackathon is announced.
-- 26 October 2026: first commit. Everything in the repository was written from this date on.
-- 1 to 14 November 2026: the submission window.
+## What it will not do
+
+It holds no keys, moves no funds, files nothing on anyone's behalf, and claims no recovered money.
+On a private route it proves the shield and says that delivery and loss cannot be proven from
+public data. "Proven" means read from the chain's public RPC endpoints with an explorer link to
+check, not a light-client proof, and the receipt says so.
