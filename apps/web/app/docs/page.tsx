@@ -720,7 +720,7 @@ node apps/cli/src/main.ts study --save`}</Code>
             </P>
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
               {[
-                { Icon: ShieldCheck, t: "The server rechecks", d: "Every 15 minutes Quittance runs the same check the page runs. A phone cannot poll chains in the background, so the browser only displays the alert." },
+                { Icon: ShieldCheck, t: "The server rechecks", d: "On a schedule, Quittance runs the same check the page runs. A phone cannot poll chains in the background, so the browser only displays the alert." },
                 { Icon: Fingerprint, t: "One alert per change", d: "It keys on the evidence and the verdict, not on read times, so a recheck that finds nothing new stays silent." },
                 { Icon: Timer, t: "It stops", d: "A proven delivery or a refund ends the watch. Otherwise it ends after the 3 to 30 days you chose. Dropped subscriptions are pruned." },
                 { Icon: Wallet, t: "It installs", d: "Quittance is an installable app. On iPhone and iPad, alerts reach Home Screen apps only, so the panel tells you to add it there first." },

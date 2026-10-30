@@ -158,6 +158,7 @@ export async function runWatches(budgetMs = 45_000): Promise<RunReport> {
     const state = evidenceState(receipt);
     const final = isFinal(receipt);
     let keep = live;
+    let retry = false;
 
     if (state !== w.state) {
       report.changed += 1;
@@ -166,14 +167,18 @@ export async function runWatches(budgetMs = 45_000): Promise<RunReport> {
       const results = await Promise.all(live.map((s) => send(s.subscription, payload)));
       report.notified += results.filter((r) => r === "sent").length;
       keep = live.filter((_, i) => results[i] !== "gone");
+      // A push that failed for any other reason must not lose the alert: the old state is kept, so the
+      // next run sees the change again and resends. The shared tag replaces it for anyone already told.
+      retry = results.some((r) => r === "failed");
     }
 
-    if (final || keep.length === 0) {
+    if ((final && !retry) || keep.length === 0) {
       report.finished += final ? 1 : 0;
       await drop(w.key);
       continue;
     }
-    await save({ ...w, label: receipt.verdict.label, summary: receipt.verdict.summary, state, checkedAt: now.toISOString(), subscribers: keep });
+    const seen = retry ? {} : { label: receipt.verdict.label, summary: receipt.verdict.summary, state };
+    await save({ ...w, ...seen, checkedAt: now.toISOString(), subscribers: keep });
   }
   return report;
 }

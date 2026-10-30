@@ -65,7 +65,8 @@ through every other command.
 
 ## What it will not do
 
-It holds no keys, moves no funds, files nothing on anyone's behalf, and claims no recovered money.
+It holds no funds and no wallet keys, signs no transaction, files nothing on anyone's behalf, and
+claims no recovered money.
 On a private route it proves the shield and says that delivery and loss cannot be proven from
 public data. "Proven" means read from the chain's public RPC endpoints with an explorer link to
 check, not a light-client proof, and the receipt says so.

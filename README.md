@@ -11,8 +11,8 @@ evidence.
 Paste a transaction hash from any chain the swap touched, the deposit address its quote issued, or
 the wallet that sent or received it. Quittance reads public records only, proves the deposit and the
 payout on the chains they happened on, and returns one of eight labels with the facts it observed,
-the limits of what it can see, and the next step. It holds no keys, moves no funds, and opens no
-support tickets.
+the limits of what it can see, and the next step. It holds no funds and no wallet keys, signs
+no transaction, and opens no support tickets.
 
 A quittance is an old legal word for a written receipt proving an obligation has been discharged.
 
@@ -252,10 +252,13 @@ forum case above would have been answered the day the payout landed, not twelve 
 How it stays honest:
 
 - **The server rechecks, the browser only displays.** A phone cannot keep polling TRON and
-  Ethereum in the background. Every 15 minutes a scheduled job calls `/api/watch/run`, which runs
-  the same check the page runs. The service worker only shows what it is sent.
+  Ethereum in the background. A scheduled job calls `/api/watch/run`, which runs the same check the
+  page runs. The service worker only shows what it is sent. The schedule is a GitHub Actions cron set
+  to every 15 minutes; GitHub runs schedules on a best-effort basis, and on this repository runs have
+  landed a few hours apart. Any scheduler holding `WATCH_CRON_SECRET` can call the endpoint instead.
 - **One alert per change.** It keys on the evidence and the verdict, not on when they were read,
-  so a recheck that finds nothing new sends nothing. A test asserts both halves.
+  so a recheck that finds nothing new sends nothing. A test asserts both halves. A push that fails
+  for any reason other than a dropped subscription is retried on the next run, not lost.
 - **It stops.** A proven delivery or a refund ends the watch. Otherwise it ends at the period you
   chose, 3 to 30 days. A subscription the browser has dropped is pruned, not retried.
 - **One lookup per swap.** Everyone watching the same swap shares one recheck, so a popular swap
@@ -335,7 +338,8 @@ delivery cannot be verified from public data rather than claiming a loss. A test
 
 ## What it will not do
 
-- Hold keys or funds. Every read is read-only.
+- Hold funds or wallet keys. Every read is read-only; the server keeps only API credentials for reading
+  and for sending alerts, none of which can move money.
 - Send a transaction. The one write is posting a receipt to a webhook the operator controls.
 - File support tickets for strangers. It produces the attachment; a human decides to send it.
 - Claim recovered money. No dollar figure for funds rescued appears anywhere.

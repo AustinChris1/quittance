@@ -178,7 +178,7 @@ export function WatchPanel({ query }: { query: string }) {
           </p>
           <p className="mt-0.5 text-sm text-muted">
             {mode === "watching"
-              ? "Quittance rechecks this swap every 15 minutes and alerts you once when the evidence changes."
+              ? "Quittance rechecks this swap on a schedule and alerts you once when the evidence changes."
               : mode === "denied"
                 ? "Allow notifications in your browser's site settings, then reload."
                 : mode === "ios-install"
