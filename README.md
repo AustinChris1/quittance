@@ -302,6 +302,12 @@ NEAR_PAYER_ACCOUNT=you.near NEAR_PAYER_KEY=ed25519:... node apps/web/scripts/pay
 
 It prints the 402, the settlement transaction with its explorer link, and the receipt.
 
+Verified on NEAR mainnet on 2 November 2026: an agent asked for the $193K swap's receipt, was
+answered 402, signed a $0.01 USDC payment, and received the `DELIVERED` receipt with a 200. The
+settlement is [`7gNyhiJp…`](https://nearblocks.io/txns/7gNyhiJpzfH4b7ZRu7FkWpxD6RzaXpRnxGkcjWAWmQCN):
+the relayer submitted the payer's signed delegate, and the USDC contract logged an `ft_transfer` of
+10000 units, $0.01, from the payer to the payee.
+
 Who settles: Base payments go through the public [PayAI](https://facilitator.payai.network)
 facilitator. NEAR payments go through [FastNEAR's facilitator](https://github.com/fastnear/x402-facilitator)
 when an allowlisted key is configured, and otherwise through Quittance's own relayer: an account
