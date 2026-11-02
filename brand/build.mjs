@@ -203,7 +203,7 @@ THREAD.push({
       ${["ethereum", "base", "arbitrum", "optimism", "polygon", "bnb", "gnosis", "avalanche", "robinhood", "tron", "solana"].map((f) => `<span style="width:52px;height:52px;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center"><img src="${chain(f)}" width="30" height="30"></span>`).join("")}
       <span style="font-size:22px;color:${C.muted};margin-left:12px">11 chains read</span>
     </div>
-    <div style="position:absolute;left:80px;top:642px;font-size:26px;font-weight:600;color:#e6e6ea">No wallet to connect. Nothing to sign. No funds held. Watch a swap and get an alert when its evidence changes.</div>
+    <div style="position:absolute;left:80px;top:642px;font-size:26px;font-weight:600;color:#e6e6ea">For people: no wallet, nothing to sign. For agents: a receipt for $0.01 over x402, paid in USDC on NEAR.</div>
     <div style="position:absolute;left:80px;top:700px;display:flex;gap:16px;align-items:center">
       <span style="font-size:28px;font-weight:700;padding:14px 26px;border-radius:999px;background:${C.mint};color:#000">Check a swap → quittance-five.vercel.app</span>
       <span class="mono" style="font-size:20px;color:${C.muted}">github.com/AustinChris1/quittance</span>
