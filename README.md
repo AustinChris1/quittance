@@ -4,22 +4,60 @@
 
 ![Quittance: both ends of a NEAR Intents swap, proven on the chains they happened on](brand/social-card-1200x630.png)
 
-**A receipt for money that crossed chains.** When a NEAR Intents swap says `FAILED`, or says
-`SUCCESS` and nothing seems to arrive, the status word is all anyone has. Quittance replaces it with
-evidence.
+**A receipt for money that crossed chains.**
 
-Paste a transaction hash from any chain the swap touched, the deposit address its quote issued, or
-the wallet that sent or received it. Quittance reads public records only, proves the deposit and the
-payout on the chains they happened on, and returns one of eight labels with the facts it observed,
-the limits of what it can see, and the next step. It holds no funds, never asks for anyone's
-keys, and opens no support tickets.
+**[Try it →](https://quittance-five.vercel.app)** · [Docs](https://quittance-five.vercel.app/docs) · [One-page submission](docs/SUBMISSION.md) · [Run it yourself](#run-it)
 
-A quittance is an old legal word for a written receipt proving an obligation has been discharged.
+## In one minute
 
-- **Try it:** https://quittance-five.vercel.app
-- **Docs:** https://quittance-five.vercel.app/docs
-- **Submission summary, one page:** [docs/SUBMISSION.md](docs/SUBMISSION.md)
-- **Check it in a minute, no install or keys:** `node apps/cli/src/main.ts verify`, then [Run it](#run-it)
+**The problem.** With [NEAR Intents](https://docs.near-intents.org), you send money on one chain and
+receive it on another: TRX on TRON in, USDT on Ethereum out. When the money seems stuck, all you get
+is a status word like `FAILED` or `SUCCESS`, and that word can be wrong in either direction. Nobody
+can look the swap up properly either: the ID that support threads quote changes on every request.
+
+**What Quittance does.** Paste any transaction hash, deposit address or wallet from the swap.
+Quittance finds the swap, reads the deposit on the chain the money left and the payout on the chain
+it reached, and checks the amount against the quote. You get one plain answer, one of eight labels
+such as `DELIVERED`, `STRANDED` or `SHIELDED_UNPROVEN`, plus a receipt that lists what it saw, what it
+cannot see, and what to do next, with explorer links anyone can click to check it.
+
+```mermaid
+flowchart LR
+  A["You paste a tx hash,<br/>deposit address or wallet"] --> B["Quittance finds the swap"]
+  B --> C["Reads the deposit<br/>on the chain it left"]
+  B --> D["Reads the payout<br/>on the chain it reached"]
+  C --> E["Checks both against the quote"]
+  D --> E
+  E --> F["One label and a receipt<br/>with links anyone can check"]
+```
+
+**Proof that it works.**
+
+- **It overturned a real complaint.** A NEAR forum post said a $193K swap had `FAILED` with zero
+  refund. Quittance proved the deposit on TRON and 190,995.29 USDT delivered on Ethereum, 12 days
+  *before* the post was written. [The full case is below.](#what-it-found-on-its-first-real-case)
+- **It works on real traffic.** Of the last 1,000 swaps, 81.8% of external payouts landed on a chain
+  it reads, and 99 of 100 sampled payouts were proven on their own chain, with none contradicted.
+- **It is honest about privacy.** Since 27 October the middle of a swap is private. Quittance proves
+  the two public ends and says plainly what nobody can prove from public data.
+- **Agents can pay for it.** A receipt costs an agent $0.01 over [x402](https://x402.org), in USDC on
+  NEAR. The first payment settled on mainnet on 2 November: [`7gNyhiJp…`](https://nearblocks.io/txns/7gNyhiJpzfH4b7ZRu7FkWpxD6RzaXpRnxGkcjWAWmQCN).
+
+**Who it is for.** Anyone with a swap that looks stuck, the support teams and integrators who have to
+answer them, and agents that need evidence before they act. People use it free; it holds no funds,
+never asks for anyone's keys, and files nothing on anyone's behalf.
+
+**Try it in a minute.** Node 24 or newer, no install, no keys:
+
+```
+node apps/cli/src/main.ts verify
+node apps/cli/src/main.ts check --deposit TBy2io3Q3Jt4UM4ejDhkkUQJZgZuXw2sus
+```
+
+The first re-checks all 17 frozen cases and prints `labels correct 17 of 17`. The second reads the
+$193K swap live from mainnet and proves both ends. Every other command is in [Run it](#run-it).
+
+*A quittance is an old legal word for a written receipt proving an obligation has been discharged.*
 
 ## What it found on its first real case
 
