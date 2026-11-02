@@ -11,8 +11,8 @@ evidence.
 Paste a transaction hash from any chain the swap touched, the deposit address its quote issued, or
 the wallet that sent or received it. Quittance reads public records only, proves the deposit and the
 payout on the chains they happened on, and returns one of eight labels with the facts it observed,
-the limits of what it can see, and the next step. It holds no funds and no wallet keys, signs
-no transaction, and opens no support tickets.
+the limits of what it can see, and the next step. It holds no funds, never asks for anyone's
+keys, and opens no support tickets.
 
 A quittance is an old legal word for a written receipt proving an obligation has been discharged.
 
@@ -270,6 +270,55 @@ It installs as an app too. iPhones and iPads only deliver web notifications to a
 Screen, so the panel says so there; Chrome and Edge offer **Install app** directly. **Send a test**
 shows what an alert looks like before anything changes.
 
+## Pay per receipt, for agents
+
+The site and `POST /api/check` stay free. A second door, `/api/receipt`, sells the same receipt
+JSON for one [x402](https://x402.org) payment of $0.01, so an agent with no account and no API key
+can buy evidence before it acts: open a ticket, retry a route, or tell its user the payout landed.
+
+Why charge at all: resolving a hash or a wallet goes through the Explorer API, which allows one
+lookup every five seconds for the whole deployment. The free checker therefore allows 30 lookups
+per visitor every 10 minutes, which no person reaches, and agents that need more pay per receipt.
+
+```
+GET /api/receipt?q=<transaction hash, deposit address or wallet>
+```
+
+1. Without payment it answers `402` with a `PAYMENT-REQUIRED` header offering two ways to pay:
+   Circle USDC on **NEAR mainnet** first, and USDC on **Base** second, so any stock x402 agent can
+   pay too. A malformed query gets `400` before any 402.
+2. The agent signs the payment and retries with `PAYMENT-SIGNATURE`. On NEAR that is a NEP-366
+   signed delegate for exactly one `ft_transfer` of the price to the payee; the payer needs no NEAR
+   for gas. On Base it is an EIP-3009 USDC authorization.
+3. The payment is verified before the lookup runs, and settled only if the receipt is built. A
+   failed lookup is never charged. The response carries the settlement in `PAYMENT-RESPONSE`.
+
+An agent can try it with the script in this repository. Keys come from the shell that runs it and
+are never written anywhere:
+
+```
+NEAR_PAYER_ACCOUNT=you.near NEAR_PAYER_KEY=ed25519:... node apps/web/scripts/pay.ts TBy2io3Q3Jt4UM4ejDhkkUQJZgZuXw2sus
+```
+
+It prints the 402, the settlement transaction with its explorer link, and the receipt.
+
+Who settles: Base payments go through the public [PayAI](https://facilitator.payai.network)
+facilitator. NEAR payments go through [FastNEAR's facilitator](https://github.com/fastnear/x402-facilitator)
+when an allowlisted key is configured, and otherwise through Quittance's own relayer: an account
+holding only enough NEAR to pay gas, which wraps the payer's signed transfer and submits it. Fees
+move straight from the payer to the payee; Quittance never holds them.
+
+| Setting | Meaning |
+| --- | --- |
+| `X402_NEAR_PAY_TO` | The NEAR account that receives fees |
+| `X402_NEAR_RELAYER_ACCOUNT`, `X402_NEAR_RELAYER_KEY` | The gas-only relayer, when settling NEAR without a facilitator key |
+| `X402_NEAR_FACILITATOR_KEY` | A FastNEAR facilitator key, used instead of the relayer when set |
+| `X402_BASE_PAY_TO` | The Base address that receives fees, to accept Base as well |
+| `X402_PRICE` | The price per receipt, `$0.01` by default |
+
+`node apps/web/scripts/new-near-account.ts` prints a fresh NEAR account and key for a relayer or a
+test payer, and saves nothing.
+
 ## Where it proves a transfer
 
 | Chain | Read |
@@ -338,9 +387,11 @@ delivery cannot be verified from public data rather than claiming a loss. A test
 
 ## What it will not do
 
-- Hold funds or wallet keys. Every read is read-only; the server keeps only API credentials for reading
-  and for sending alerts, none of which can move money.
-- Send a transaction. The one write is posting a receipt to a webhook the operator controls.
+- Hold funds or anyone's keys. Every read is read-only. The server keeps API credentials for reading
+  and for sending alerts and, when it settles NEAR payments itself, one relayer key whose account
+  holds only enough NEAR for gas. None of them can move swap money.
+- Send a transaction of its own. The writes are posting a receipt to a webhook the operator
+  controls and, on the paid door, relaying a payer's own signed fee to the payee.
 - File support tickets for strangers. It produces the attachment; a human decides to send it.
 - Claim recovered money. No dollar figure for funds rescued appears anywhere.
 - Accuse anyone. Each label states its evidence and the edge of that evidence.

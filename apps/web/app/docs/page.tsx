@@ -312,6 +312,18 @@ const LABELS: { label: string; means: string; next: string }[] = [
 
 const FAQ: { q: string; a: React.ReactNode }[] = [
   {
+    q: "Can an agent use it without an account?",
+    a: (
+      <>
+        Yes. <code className="font-mono">/api/receipt</code> sells the same receipt for one x402 payment of $0.01, in USDC on NEAR
+        mainnet or on Base. Without payment it answers 402 with what to pay; the agent signs and retries. The payment is checked
+        before the lookup runs and settled only if the receipt is built, so a failed lookup costs nothing. This site and its free
+        checker stay free; the paid door exists because the Explorer allows one lookup every five seconds for everyone, so the free
+        checker allows 30 lookups per visitor every 10 minutes.
+      </>
+    ),
+  },
+  {
     q: "Is Quittance the first place a swap can be looked up?",
     a: (
       <>

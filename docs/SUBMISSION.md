@@ -36,6 +36,8 @@ describes a step no public record can reach.
 4. Returns one of eight labels. Each receipt carries what was observed, the limits of what can be
    seen, and the next step, and is fingerprinted with sha256 over canonical JSON.
 5. Watches a swap and sends a browser alert once, when its evidence changes.
+6. Sells the same receipt to agents for one x402 payment of $0.01 in USDC on NEAR mainnet, or on
+   Base, with no account or key. The site stays free; a failed lookup is never charged.
 
 ## What it found
 
@@ -65,8 +67,8 @@ through every other command.
 
 ## What it will not do
 
-It holds no funds and no wallet keys, signs no transaction, files nothing on anyone's behalf, and
-claims no recovered money.
+It holds no funds, never asks for anyone's keys, files nothing on anyone's behalf, and claims no
+recovered money. On the paid door, fees move straight from the payer to the payee.
 On a private route it proves the shield and says that delivery and loss cannot be proven from
 public data. "Proven" means read from the chain's public RPC endpoints with an explorer link to
 check, not a light-client proof, and the receipt says so.
