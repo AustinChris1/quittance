@@ -5,4 +5,6 @@ packages:
 # pnpm 11 needs these declared explicitly or it refuses the native builds.
 allowBuilds:
   "@tailwindcss/oxide": true
+  # Pulled in by @x402/near; its pure JavaScript fallback is used, so the native addon is not built.
+  secp256k1: false
   sharp: true

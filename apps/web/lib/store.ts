@@ -11,6 +11,8 @@ export type Store = {
   sadd(set: string, member: string): Promise<void>;
   srem(set: string, member: string): Promise<void>;
   smembers(set: string): Promise<string[]>;
+  /** Adds one to a counter that disappears after `ttlSeconds`, and returns the new count. */
+  incr(key: string, ttlSeconds: number): Promise<number>;
 };
 
 function redisEnv(): { url: string; token: string } | undefined {
@@ -40,13 +42,18 @@ function redisStore(env: { url: string; token: string }): Store {
     sadd: async (set, member) => void (await call(["SADD", set, member])),
     srem: async (set, member) => void (await call(["SREM", set, member])),
     smembers: (set) => call<string[]>(["SMEMBERS", set]),
+    incr: async (key, ttlSeconds) => {
+      const n = await call<number>(["INCR", key]);
+      if (n === 1) await call(["EXPIRE", key, ttlSeconds]);
+      return n;
+    },
   };
 }
 
 /** Development only: one JSON file, so the whole flow runs locally without an account. */
 function fileStore(): Store {
   const path = join(tmpdir(), "quittance-watch-store.json");
-  type Data = { kv: Record<string, string>; sets: Record<string, string[]> };
+  type Data = { kv: Record<string, string>; sets: Record<string, string[]>; counters?: Record<string, { n: number; until: number }> };
   const read = (): Data => {
     try {
       return JSON.parse(readFileSync(path, "utf8")) as Data;
@@ -78,6 +85,15 @@ function fileStore(): Store {
       write(d);
     },
     smembers: async (set) => read().sets[set] ?? [],
+    incr: async (key, ttlSeconds) => {
+      const d = read();
+      const now = Date.now();
+      const c = d.counters?.[key];
+      const next = c && c.until > now ? { n: c.n + 1, until: c.until } : { n: 1, until: now + ttlSeconds * 1000 };
+      d.counters = { ...d.counters, [key]: next };
+      write(d);
+      return next.n;
+    },
   };
 }
 

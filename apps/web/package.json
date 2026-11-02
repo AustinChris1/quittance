@@ -9,6 +9,9 @@
     "start": "next start -p 3000"
   },
   "dependencies": {
+    "@x402/core": "2.29.0",
+    "@x402/evm": "2.29.0",
+    "@x402/near": "2.29.0",
     "gsap": "3.13.0",
     "lucide-react": "0.544.0",
     "motion": "12.23.12",
@@ -16,6 +19,7 @@
     "next-themes": "0.4.6",
     "react": "19.1.1",
     "react-dom": "19.1.1",
+    "viem": "^2.57.14",
     "web-push": "3.6.7"
   },
   "devDependencies": {

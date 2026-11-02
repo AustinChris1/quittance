@@ -1,48 +1,33 @@
 import { NextResponse } from "next/server";
-import { renderText } from "../../../../../packages/core/src/receipt.ts";
-import { loadTokens, chainName } from "../../../../../packages/core/src/sources/tokens.ts";
-import type { Evidence } from "../../../../../packages/core/src/types.ts";
-import { runCheck } from "../../../lib/check.ts";
+import { BAD_QUERY, receiptBody, validQuery } from "../../../lib/receipt-response.ts";
+import { allowFreeCheck, FREE_CHECKS, WINDOW_SECONDS } from "../../../lib/limit.ts";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  let query = "";
+  let raw: unknown;
   try {
-    const body = (await request.json()) as { query?: unknown };
-    query = typeof body.query === "string" ? body.query.trim() : "";
+    raw = ((await request.json()) as { query?: unknown }).query;
   } catch {
     return NextResponse.json({ error: "Send a JSON body with a query field." }, { status: 400 });
   }
+  const query = validQuery(raw);
+  if (!query) return NextResponse.json({ error: BAD_QUERY }, { status: 400 });
 
-  if (query.length < 8 || query.length > 128) {
+  if (!(await allowFreeCheck(request))) {
     return NextResponse.json(
-      { error: "Paste a transaction hash, a deposit address or a wallet address." },
-      { status: 400 },
+      {
+        error: `The free checker allows ${FREE_CHECKS} lookups every ${WINDOW_SECONDS / 60} minutes per visitor. Try again shortly, or pay per receipt at /api/receipt.`,
+      },
+      { status: 429, headers: { "Retry-After": String(WINDOW_SECONDS) } },
     );
   }
 
   try {
-    const { evidence, receipt, inputKind } = await runCheck(query);
-    const swaps = evidence.candidates ? await describeSwaps(evidence) : undefined;
-    return NextResponse.json({ inputKind, receipt, swaps, text: renderText(receipt) });
+    return NextResponse.json(await receiptBody(query));
   } catch (err) {
     const detail = err instanceof Error ? err.message : "Unknown failure";
     return NextResponse.json({ error: detail }, { status: 500 });
   }
-}
-
-/** Gives each swap a wallet appears in readable asset names, from the public token list. */
-async function describeSwaps(evidence: Evidence) {
-  const { tokens } = await loadTokens();
-  const name = (assetId?: string) => {
-    const t = assetId ? tokens.get(assetId) : undefined;
-    return t ? { symbol: t.symbol, chain: chainName(t.blockchain), blockchain: t.blockchain } : undefined;
-  };
-  return (evidence.candidates ?? []).map((c) => ({
-    ...c,
-    origin: name(c.originAsset),
-    destination: name(c.destinationAsset),
-  }));
 }
