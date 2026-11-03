@@ -330,7 +330,7 @@ const FAQ: { q: string; a: React.ReactNode }[] = [
       <>
         No, and it does not claim to be. The Intents Explorer and the 1Click status endpoint already show the operator's record and
         its status word. Quittance is not a new data source. What it adds is reading the deposit and the payout on the chains they
-        happened on, separating a shield from a delivery, and attaching the limits of what can be seen. We did not find another
+        happened on, separating a shield from a delivery, and attaching the limits of what can be seen. I did not find another
         public tool that does that.
       </>
     ),

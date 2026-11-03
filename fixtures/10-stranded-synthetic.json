@@ -5,7 +5,7 @@
     "title": "Terminal status, deposit credited, refund field genuinely zero",
     "frozenAt": "2026-10-26",
     "provenance": {
-      "status": "Synthetic. The case that previously occupied this slot was a public report of a stranded deposit that we disproved: see 01-reported-stranded-actually-delivered. We hold no verified real STRANDED case, and say so rather than implying one."
+      "status": "Synthetic. The case that previously occupied this slot was a public report of a stranded deposit that Quittance disproved: see 01-reported-stranded-actually-delivered. No verified real STRANDED case is held, and this fixture says so rather than implying one."
     }
   },
   "evidence": {

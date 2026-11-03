@@ -453,7 +453,7 @@ Each fixture carries its own provenance block. Three of the cases were open and 
 | `04-shielded-unproven` | [near/intents#384](https://github.com/near/intents/issues/384) |
 | `05`, `06`, `08`, `09` | Controls and regression guards, so the rules are shown not to label every swap a failure |
 | `07-unknown-to-operator` | An address the operator has never seen reads `UNDETERMINED`, never a clean bill of health |
-| `10-stranded-synthetic` | Synthetic. We hold no verified real STRANDED case, and say so rather than implying one |
+| `10-stranded-synthetic` | Synthetic. No verified real STRANDED case is held, and the fixture says so rather than implying one |
 | `11`, `12` | The two confidential swaps in [near/intents#384](https://github.com/near/intents/issues/384), read from their signed intents: [0.038 ETH](https://nearblocks.io/txns/3djtQ3pUHv8SGtNKS3CMGice7E7S9oeS4DJzNYyjCUVD) and [0.001 ETH](https://nearblocks.io/txns/jNeJZQ4pa4p69LBiEvTDbTj2WmhCgiKRY2a2scA193j) |
 | `13-shield-then-delivered` | Regression guard. A proven delivery beats a shield step, so the treasury rule never hides an arrival |
 | `14-success-contradicted-by-chain` | Regression guard. A SUCCESS whose published destination transaction pays someone else reads `UNDETERMINED`, never `DELIVERED` |
