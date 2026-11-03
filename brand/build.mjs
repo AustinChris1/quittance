@@ -122,7 +122,7 @@ ASSETS.push({
     </div>`),
 });
 
-/* ---------- the launch thread on X: four 16:9 images, every figure from the README ---------- */
+/* ---------- the launch thread on X: five 16:9 images, every figure from the README ---------- */
 const TW = 1600;
 const TH = 900;
 const chip = (text, bg, fg) => `<span class="mono" style="font-size:19px;font-weight:500;padding:9px 16px;border-radius:999px;background:${bg};color:${fg};white-space:nowrap">${text}</span>`;
@@ -130,7 +130,7 @@ const frame = (n, body, { rosette = true } = {}) =>
   page(TW, TH, `body{background:#000;color:#fff;position:relative}`, `
     ${rosette ? `${glow(1080, -380, 900)}${rosetteImg(760, 1110, -250, 0.32)}` : ""}
     <div style="position:absolute;left:80px;top:64px">${lockup(38, 30, C.white, C.white, C.mint)}</div>
-    <div class="mono" style="position:absolute;right:80px;top:74px;font-size:20px;color:${C.muted}">${typeof n === "number" ? `${n}/4` : n}</div>
+    <div class="mono" style="position:absolute;right:80px;top:74px;font-size:20px;color:${C.muted}">${n}/5</div>
     ${body}
     <div class="mono" style="position:absolute;left:80px;bottom:56px;font-size:20px;color:${C.muted}">quittance-five.vercel.app</div>
     <div class="mono" style="position:absolute;right:80px;bottom:56px;font-size:20px;color:${C.muted}">Built at NEAR HACKATHON</div>`);
@@ -210,7 +210,7 @@ THREAD.push({
     </div>`),
 });
 
-// The reply under post 4: every frozen case, so the $193K story is not the only evidence. Labels from `verify`.
+// Post 5: every frozen case, so the $193K story is not the only evidence. Labels from `verify`.
 const LABEL_COLOR = { DELIVERED: [C.mint, "#000"], REFUNDED_OK: [C.mint, "#000"], WRONG_DOOR: ["#ff7966", "#000"], LOCKED_OUT: ["#ff7966", "#000"], STRANDED: ["#ff7966", "#000"], SHIELDED_UNPROVEN: ["#9797ff", "#000"], IN_FLIGHT: ["#262626", "#fff"], UNDETERMINED: ["#262626", "#fff"] };
 const caseRow = (id, label, text, source) => `<div style="display:flex;align-items:center;gap:22px;padding:13px 0;border-top:1px solid #222">
     <span class="mono" style="font-size:22px;color:${C.muted};width:70px">${id}</span>
@@ -220,7 +220,7 @@ const caseRow = (id, label, text, source) => `<div style="display:flex;align-ite
 const miniChip = (id, label) => `<span style="display:inline-flex;align-items:center;gap:8px"><span class="mono" style="font-size:18px;color:${C.muted}">${id}</span>${chip(label, ...LABEL_COLOR[label]).replace("font-size:19px", "font-size:15px").replace("padding:9px 16px", "padding:6px 12px")}</span>`;
 THREAD.push({
   name: "thread/5-every-case.png",
-  html: frame("evidence", `
+  html: frame(5, `
     <div style="position:absolute;left:80px;top:150px;display:flex;align-items:baseline;gap:28px">
       <div class="display" style="font-size:64px">17 cases, each with its source.</div>
       <div class="mono" style="font-size:20px;color:${C.mint}">labels correct 17 of 17</div>

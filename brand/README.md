@@ -24,7 +24,7 @@ It is eight round-capped strokes on a 32 unit grid, with no fill, texture or fon
 | X or GitHub avatar | `avatar-400.png` (circle safe) |
 | X header | `x-banner-1500x500.png` (clear of the profile photo at lower left) |
 | Link preview | `social-card-1200x630.png`, served by the site as `/og.png` |
-| Launch thread on X | `thread/1-…png` to `thread/4-…png` (3200 x 1800, 16:9), one per post, and `thread/5-every-case.png` for the evidence reply |
+| Launch thread on X | `thread/1-…png` to `thread/5-…png` (3200 x 1800, 16:9), one per post; post 5 shows every frozen case |
 | The guilloché motif | `guilloche-mint.svg` |
 
 ## Colour
