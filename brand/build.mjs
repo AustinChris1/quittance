@@ -126,11 +126,11 @@ ASSETS.push({
 const TW = 1600;
 const TH = 900;
 const chip = (text, bg, fg) => `<span class="mono" style="font-size:19px;font-weight:500;padding:9px 16px;border-radius:999px;background:${bg};color:${fg};white-space:nowrap">${text}</span>`;
-const frame = (n, body) =>
+const frame = (n, body, { rosette = true } = {}) =>
   page(TW, TH, `body{background:#000;color:#fff;position:relative}`, `
-    ${glow(1080, -380, 900)}${rosetteImg(760, 1110, -250, 0.32)}
+    ${rosette ? `${glow(1080, -380, 900)}${rosetteImg(760, 1110, -250, 0.32)}` : ""}
     <div style="position:absolute;left:80px;top:64px">${lockup(38, 30, C.white, C.white, C.mint)}</div>
-    <div class="mono" style="position:absolute;right:80px;top:74px;font-size:20px;color:${C.muted}">${n}/4</div>
+    <div class="mono" style="position:absolute;right:80px;top:74px;font-size:20px;color:${C.muted}">${typeof n === "number" ? `${n}/4` : n}</div>
     ${body}
     <div class="mono" style="position:absolute;left:80px;bottom:56px;font-size:20px;color:${C.muted}">quittance-five.vercel.app</div>
     <div class="mono" style="position:absolute;right:80px;bottom:56px;font-size:20px;color:${C.muted}">Built at NEAR HACKATHON</div>`);
@@ -208,6 +208,39 @@ THREAD.push({
       <span style="font-size:28px;font-weight:700;padding:14px 26px;border-radius:999px;background:${C.mint};color:#000">Check a swap → quittance-five.vercel.app</span>
       <span class="mono" style="font-size:20px;color:${C.muted}">github.com/AustinChris1/quittance</span>
     </div>`),
+});
+
+// The reply under post 4: every frozen case, so the $193K story is not the only evidence. Labels from `verify`.
+const LABEL_COLOR = { DELIVERED: [C.mint, "#000"], REFUNDED_OK: [C.mint, "#000"], WRONG_DOOR: ["#ff7966", "#000"], LOCKED_OUT: ["#ff7966", "#000"], STRANDED: ["#ff7966", "#000"], SHIELDED_UNPROVEN: ["#9797ff", "#000"], IN_FLIGHT: ["#262626", "#fff"], UNDETERMINED: ["#262626", "#fff"] };
+const caseRow = (id, label, text, source) => `<div style="display:flex;align-items:center;gap:22px;padding:13px 0;border-top:1px solid #222">
+    <span class="mono" style="font-size:22px;color:${C.muted};width:70px">${id}</span>
+    <span style="width:300px">${chip(label, ...LABEL_COLOR[label])}</span>
+    <span style="font-size:24px;font-weight:600;flex:1">${text}</span>
+    <span class="mono" style="font-size:19px;color:${C.muted};text-align:right">${source}</span></div>`;
+const miniChip = (id, label) => `<span style="display:inline-flex;align-items:center;gap:8px"><span class="mono" style="font-size:18px;color:${C.muted}">${id}</span>${chip(label, ...LABEL_COLOR[label]).replace("font-size:19px", "font-size:15px").replace("padding:9px 16px", "padding:6px 12px")}</span>`;
+THREAD.push({
+  name: "thread/5-every-case.png",
+  html: frame("evidence", `
+    <div style="position:absolute;left:80px;top:150px;display:flex;align-items:baseline;gap:28px">
+      <div class="display" style="font-size:64px">17 cases, each with its source.</div>
+      <div class="mono" style="font-size:20px;color:${C.mint}">labels correct 17 of 17</div>
+    </div>
+    <div style="position:absolute;left:80px;right:80px;top:252px">
+      ${caseRow("01", "DELIVERED", "The $193K forum report: paid on Ethereum 12 days before the post", "forum thread 42664")}
+      ${caseRow("02", "WRONG_DOOR", "A deposit that did not match the quote it was made for", "near/intents#382")}
+      ${caseRow("03", "LOCKED_OUT", "A BTC refund that exists on paper but is out of reach", "near/intents#385")}
+      ${caseRow("04", "SHIELDED_UNPROVEN", "A green SUCCESS that was a shield to a private treasury", "near/intents#384")}
+      ${caseRow("11 12", "SHIELDED_UNPROVEN", "0.038 ETH and 0.001 ETH, read from their signed intents", "near/intents#384")}
+      ${caseRow("16", "DELIVERED", "Read live the day after the switch: USDC in on Base, USDT out on Solana", "28 Oct 2026")}
+    </div>
+    <div style="position:absolute;left:80px;right:80px;top:668px;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center">
+      <span style="font-size:21px;font-weight:600;color:#e6e6ea;margin-right:4px">9 controls and guards, so not every swap reads as a failure:</span>
+      ${[["05", "DELIVERED"], ["06", "REFUNDED_OK"], ["07", "UNDETERMINED"], ["08", "DELIVERED"], ["09", "IN_FLIGHT"], ["13", "DELIVERED"], ["14", "UNDETERMINED"], ["15", "DELIVERED"], ["17", "DELIVERED"]].map(([i, l]) => miniChip(i, l)).join("")}
+    </div>
+    <div style="position:absolute;left:80px;right:80px;top:752px;display:flex;align-items:center;gap:16px">
+      ${miniChip("10", "STRANDED")}
+      <span style="font-size:21px;font-weight:600;color:#e6e6ea">is synthetic. No verified real stranded case is held, and the fixture says so.</span>
+    </div>`, { rosette: false }),
 });
 for (const a of THREAD) ASSETS.push({ ...a, w: TW, h: TH, dsf: 2 });
 mkdirSync(join(OUT, "thread"), { recursive: true });
