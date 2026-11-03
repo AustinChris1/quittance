@@ -53,6 +53,7 @@ const SECTIONS: DocSection[] = [
     { id: "sharing", title: "Sharing a receipt" },
     { id: "cli", title: "Command line" },
     { id: "api", title: "HTTP API" },
+    { id: "paid", title: "Pay per receipt (x402)" },
     { id: "watch", title: "Watch a swap" },
     { id: "webhook", title: "Webhook" },
   ] },
@@ -723,6 +724,33 @@ node apps/cli/src/main.ts study --save`}</Code>
   "text": "QUITTANCE RECEIPT ..."
 }`}</Code>
             <P>When the input is a wallet, <M>swaps</M> lists the swaps it appears in, each with its deposit address to check next.</P>
+            <P>
+              The free checker allows 30 lookups per visitor every 10 minutes, because the Explorer allows one lookup every five seconds
+              for the whole deployment. A person never meets the limit. Agents that need more use the paid door below.
+            </P>
+
+            <H3 id="paid">Pay per receipt (x402)</H3>
+            <P>
+              <M>/api/receipt</M> returns the same JSON for one <a className="underline underline-offset-4" href="https://x402.org">x402</a> payment
+              of $0.01, with no account and no API key. Without payment it answers 402 and says what to pay: Circle USDC on NEAR mainnet
+              first, and USDC on Base second, so any standard x402 agent can pay.
+            </P>
+            <Code>{`curl -i "https://quittance-five.vercel.app/api/receipt?q=TBy2io3Q3Jt4UM4ejDhkkUQJZgZuXw2sus"
+# HTTP/1.1 402 Payment Required
+# PAYMENT-REQUIRED: <base64> accepts near:mainnet 0.01 USDC, eip155:8453 0.01 USDC`}</Code>
+            <P>
+              The agent signs the payment and repeats the request with a <M>PAYMENT-SIGNATURE</M> header. On NEAR that is a NEP-366
+              signed delegate for exactly one USDC transfer, so the payer needs no NEAR for gas. The payment is verified before the
+              lookup runs and settled only if the receipt is built: a failed lookup is never charged. The settlement comes back in{" "}
+              <M>PAYMENT-RESPONSE</M>, and fees move straight from the payer to the payee.
+            </P>
+            <P>
+              The first paid receipt settled on NEAR mainnet on 2 November 2026, in transaction{" "}
+              <a className="underline underline-offset-4" href="https://nearblocks.io/txns/7gNyhiJpzfH4b7ZRu7FkWpxD6RzaXpRnxGkcjWAWmQCN">
+                7gNyhiJp…
+              </a>
+              . The repository includes the agent script that made it, <M>apps/web/scripts/pay.ts</M>.
+            </P>
 
             <H3 id="watch">Watch a swap</H3>
             <P>
