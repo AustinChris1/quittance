@@ -9,9 +9,9 @@ on, and says plainly what public records cannot show.
 | Live | https://quittance-five.vercel.app |
 | Repository | https://github.com/AustinChris1/quittance |
 | Docs | https://quittance-five.vercel.app/docs |
-| Demo | The 60 second film in the launch post on X, linked in the submission form |
+| Demo | The one-minute film in the launch post on X, linked in the submission form |
 | Tracks | Open Innovation, Unstoppable DeFi, Privacy and Private AI, Real-World Money |
-| Built | 26 October to 1 November 2026, every line after the hackathon was announced |
+| Built | From 26 October 2026, every line after the hackathon was announced |
 
 ![Quittance](../brand/social-card-1200x630.png)
 
